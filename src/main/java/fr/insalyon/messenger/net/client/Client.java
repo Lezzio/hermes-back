@@ -12,41 +12,38 @@ import java.util.Date;
 import java.util.Scanner;
 
 public class Client {
+    protected Socket echoSocket = null;
+    protected PrintWriter socOut = null;
+    protected BufferedReader stdIn = null;
+    protected BufferedReader socIn = null;
+    private Message message = null;
 
-    /**
-     * main method
-     * accepts a connection, receives a message from client then sends an echo to the client
-     **/
-    public static void main(String[] args) throws IOException {
+    private boolean running = true;
 
-        Socket echoSocket = null;
-        PrintWriter socOut = null;
-        BufferedReader stdIn = null;
-        BufferedReader socIn = null;
-        Message message = null;
+    public Client(){
 
-        if (args.length != 2) {
-            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
-            System.exit(1);
-        }
+    }
 
+    public void init(String serverHost, int serverPort) throws IOException {
         String clientName = registerClient();
-
+        running = false;
         try {
             // creation socket ==> connexion
-            echoSocket = new Socket(args[0], Integer.parseInt(args[1]));
+            echoSocket = new Socket(serverHost, serverPort);
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
             socOut = new PrintWriter(echoSocket.getOutputStream());
             stdIn = new BufferedReader(new InputStreamReader(System.in));
+            running = true;
         } catch (UnknownHostException e) {
-            System.err.println("Don't know about host:" + args[0]);
+            System.err.println("Don't know about host:" + serverHost);
             System.exit(1);
         } catch (IOException e) {
             System.err.println("Couldn't get I/O for "
-                    + "the connection to:" + args[0]);
+                    + "the connection to:" + serverHost);
             System.exit(1);
         }
+
 
         String line;
         while (true) {
@@ -57,6 +54,25 @@ public class Client {
             System.out.println("echo: " + socIn.readLine());
         }
         closeClient(echoSocket, socOut, stdIn, socIn);
+    }
+
+    /**
+     * main method
+     * accepts a connection, receives a message from client then sends an echo to the client
+     **/
+    public static void main(String[] args) throws IOException {
+
+
+
+        if (args.length != 2) {
+            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
+            System.exit(1);
+        }
+
+        Client client = new Client();
+        client.init(args[0], Integer.parseInt(args[1]));
+
+
     }
 
     private static void closeClient(Socket echoSocket, PrintWriter socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
