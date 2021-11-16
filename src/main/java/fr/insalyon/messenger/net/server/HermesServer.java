@@ -1,5 +1,7 @@
 package fr.insalyon.messenger.net.server;
 
+import fr.insalyon.messenger.net.mongodb.MongoDB;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;

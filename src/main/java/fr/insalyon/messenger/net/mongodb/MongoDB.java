@@ -1,5 +1,7 @@
 package fr.insalyon.messenger.net.mongodb;
 
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
@@ -9,15 +11,33 @@ import org.bson.Document;
 
 
 public class MongoDB {
-    private final MongoClient MONGOCLIENT = MongoClients.create("mongodb+srv://admin:root@cluster0.h6mqd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+
+    private final ConnectionString connectionString = new ConnectionString("mongodb+srv://root:root@cluster0.h6mqd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+    private final MongoClientSettings SETTING = MongoClientSettings.builder()
+            .applyConnectionString(connectionString)
+            .build();
+
+
+    private final MongoClient MONGOCLIENT = MongoClients.create(SETTING);
     private MongoDatabase database;
     public MongoDB() {
         this.database = MONGOCLIENT.getDatabase("hermes");
     }
 
     public void insertLogMessage(String msg){
+        System.out.println(msg);
         MongoCollection<Document> logs = database.getCollection("log");
-        logs.insertOne(Document.parse(msg));
+        System.out.println(msg);
+        Document doc = Document.parse(msg);
+        System.out.println(msg);
+        System.out.println(doc.toString());
+        logs.insertOne(doc);
+        try {
+            logs.insertOne(doc);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        System.out.println(msg);
     }
 
     public void insertPrivateMessage(String msg){
