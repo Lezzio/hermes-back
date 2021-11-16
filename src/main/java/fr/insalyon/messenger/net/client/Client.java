@@ -9,6 +9,8 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,6 +27,9 @@ public class Client {
     final static GsonBuilder builder = new GsonBuilder();
     final static Gson gson = builder.create();
 
+    private final ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+
     private boolean running = true;
 
     public Client(){
@@ -38,9 +43,18 @@ public class Client {
             echoSocket = new Socket(serverHost, serverPort);
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
+
+            executorService.submit(() -> {
+                try {
+                    listenToServer(socIn);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
             socOut = new PrintStream(echoSocket.getOutputStream());
             System.out.print("Enter your name to log in\n");
             stdIn = new BufferedReader(new InputStreamReader(System.in));
+
             clientName = registerClient(stdIn, socOut);
             running = true;
             System.out.print("\nYou are logged in as : "+clientName);
@@ -60,12 +74,7 @@ public class Client {
             if (line.equals(".")) break;
             message = new TextMessage(line, clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
-            try {
-                System.out.println("echo: " + socIn.readLine());
-            } catch (SocketException e) {
-                System.err.println(e.getMessage());
-                System.exit(1);
-            }
+
 
         }
         closeClient(echoSocket, socOut, stdIn, socIn);
@@ -88,6 +97,15 @@ public class Client {
         client.init(args[0], Integer.parseInt(args[1]));
 
 
+    }
+
+    public void listenToServer(BufferedReader socIn) throws IOException {
+        try {
+            System.out.println("echo: " + socIn.readLine());
+        } catch (SocketException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
+        }
     }
 
     private static void closeClient(Socket echoSocket, PrintStream socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
