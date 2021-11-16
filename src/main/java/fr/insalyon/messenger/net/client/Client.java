@@ -11,6 +11,9 @@ import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 public class Client {
 
     /**
@@ -24,6 +27,8 @@ public class Client {
         BufferedReader stdIn = null;
         BufferedReader socIn = null;
         Message message = null;
+        final GsonBuilder builder = new GsonBuilder();
+        final Gson gson = builder.create();
 
         if (args.length != 2) {
             System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
@@ -39,6 +44,7 @@ public class Client {
                     new InputStreamReader(echoSocket.getInputStream()));
             socOut = new PrintWriter(echoSocket.getOutputStream());
             stdIn = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("You are logged in as : "+clientName);
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
             System.exit(1);
@@ -53,7 +59,7 @@ public class Client {
             line = stdIn.readLine();
             if (line.equals(".")) break;
             message = new Message(clientName, line, new Date(System.currentTimeMillis()));
-            socOut.println(message.JSONserializer());
+            socOut.println(gson.toJson(message));
             System.out.println("echo: " + socIn.readLine());
         }
         closeClient(echoSocket, socOut, stdIn, socIn);
@@ -70,7 +76,6 @@ public class Client {
         Scanner sc= new Scanner(System.in);
         System.out.print("Please enter your name");
         String clientName= sc.nextLine();
-        System.out.print("You are logged in as : "+clientName);
         return clientName;
     }
 

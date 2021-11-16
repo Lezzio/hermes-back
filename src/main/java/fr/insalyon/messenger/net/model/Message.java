@@ -10,8 +10,7 @@ public class Message {
     private String sender;
     private String content;
     private Date time;
-    final GsonBuilder builder = new GsonBuilder();
-    final Gson gson = builder.create();
+
 
     public Message(String sender, String content, Date time) {
         this.sender = sender;
@@ -31,7 +30,7 @@ public class Message {
         return time;
     }
 
-    public String JSONserializer(){
-        return gson.toJson(this);
-    }
+//    public String JSONserializer(){
+//        return gson.toJson(this);
+//    }
 }
