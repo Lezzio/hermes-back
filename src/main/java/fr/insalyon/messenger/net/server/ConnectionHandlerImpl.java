@@ -42,11 +42,11 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             while (true) {
                 System.out.println("received message");
                 String line = socIn.readLine();
-                hermesServer.broadcastMessage(line);
+//                hermesServer.broadcastMessage(line);
 //                hermesServer.mongoDB.insertLogMessage(line);
-
-                Message message = gson.fromJson(line, messageTypeToken.getType());
-                System.out.println("Message = " + message + " class = " + message.getClass());
+                System.out.println("message: " + line);
+//                Message message = gson.fromJson(line, messageTypeToken.getType());
+//                System.out.println("Message = " + message + " class = " + message.getClass());
 
 //                AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
 //                System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
@@ -54,6 +54,9 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             }
         } catch (IOException exception) {
             exception.printStackTrace();
+        }
+        catch (Exception e){
+            System.out.println(e);
         }
     }
 
