@@ -52,6 +52,11 @@ public class MongoDB {
         logs.insertOne(Document.parse(msg));
     }
 
+    public void insertChats(String msg){
+        MongoCollection<Document> logs = database.getCollection("chats");
+        logs.insertOne(Document.parse(msg));
+    }
+
 
 
 }

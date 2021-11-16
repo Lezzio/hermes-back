@@ -2,6 +2,7 @@ package fr.insalyon.messenger.net.client;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import fr.insalyon.messenger.net.model.ConnectionMessage;
 import fr.insalyon.messenger.net.model.Message;
 import fr.insalyon.messenger.net.model.TextMessage;
 
@@ -69,7 +70,6 @@ public class HermesClient {
         }catch(Exception e ){
             System.out.println(e);
         }
-        hClient.sendMessage("lol");
     }
     /**
      * Permet de connecter le client au serveur Hermes.
@@ -83,6 +83,7 @@ public class HermesClient {
         outStream = new PrintStream(socket.getOutputStream());
         executorService.submit(() -> listenerThread(this,inStream));
         executorService.submit(() -> senderThread(this,outStream));
+        sendConnection();
     }
 
     public void listenerThread (HermesClient hClient, BufferedReader inStream){
@@ -132,6 +133,13 @@ public class HermesClient {
         if(socket != null){
             TextMessage fullMessage = new TextMessage(message,this.username,"use3", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(fullMessage));
+        }
+    }
+
+    public void sendConnection(){
+        if(socket != null){
+            ConnectionMessage msg = new ConnectionMessage(this.username,"", new Date(System.currentTimeMillis()));
+            outStream.println(gson.toJson(msg));
         }
     }
 
