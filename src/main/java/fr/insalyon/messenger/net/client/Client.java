@@ -3,10 +3,7 @@ package fr.insalyon.messenger.net.client;
 import fr.insalyon.messenger.net.model.AuthenticationMessage;
 import fr.insalyon.messenger.net.model.Message;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -17,15 +14,16 @@ import com.google.gson.GsonBuilder;
 
 public class Client {
     private Socket echoSocket = null;
-    private PrintWriter socOut = null;
+    private PrintStream socOut = null;
     private BufferedReader stdIn = null;
     private BufferedReader socIn = null;
     private String clientName;
 
     private Message message = null;
-
     final GsonBuilder builder = new GsonBuilder();
     final Gson gson = builder.create();
+
+
 
     private boolean running = true;
 
@@ -86,7 +84,7 @@ public class Client {
 
     }
 
-    private static void closeClient(Socket echoSocket, PrintWriter socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
+    private static void closeClient(Socket echoSocket, PrintStream socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
         socOut.close();
         socIn.close();
         stdIn.close();
