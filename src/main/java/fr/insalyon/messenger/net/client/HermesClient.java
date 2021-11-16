@@ -3,6 +3,7 @@ package fr.insalyon.messenger.net.client;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.model.ConnectionMessage;
+import fr.insalyon.messenger.net.model.DisconnectionMessage;
 import fr.insalyon.messenger.net.model.Message;
 import fr.insalyon.messenger.net.model.TextMessage;
 
@@ -143,6 +144,13 @@ public class HermesClient {
         }
     }
 
+    public void sendDisconnection(){
+        if(socket != null){
+            DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date(System.currentTimeMillis()));
+            outStream.println(gson.toJson(msg));
+        }
+    }
+
     /**
      * Permet de fermet les flux et de terminer la
      * connexion avec le serveur
@@ -153,6 +161,7 @@ public class HermesClient {
             socket.close();
             inStream.close();
             outStream.close();
+            sendDisconnection();
         }catch(IOException e){
             System.out.println(e);
         }
