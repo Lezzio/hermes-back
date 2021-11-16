@@ -38,19 +38,18 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             BufferedReader socIn = null;
             socIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintStream socOut = new PrintStream(socket.getOutputStream());
-            hermesServer.addClient(socket.toString(),socket);
-            while (true) {
+            String message;
+            while ( (message=socIn.readLine()) != null) {
                 System.out.println("received message");
-                String line = socIn.readLine();
 //                hermesServer.broadcastMessage(line);
 //                hermesServer.mongoDB.insertLogMessage(line);
-                System.out.println("message: " + line);
+                System.out.println("message: " + message);
 //                Message message = gson.fromJson(line, messageTypeToken.getType());
 //                System.out.println("Message = " + message + " class = " + message.getClass());
 
 //                AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
 //                System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
-                socOut.println(line);
+                socOut.println(message);
             }
         } catch (IOException exception) {
             exception.printStackTrace();
