@@ -28,7 +28,6 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                 hermesServer.mongoDB.insertLogMessage(line);
                 AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
                 System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
-                hermesServer.saveMessage(line);
                 socOut.println(line);
             }
         } catch (IOException exception) {
