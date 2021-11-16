@@ -3,10 +3,7 @@ package fr.insalyon.messenger.net.client;
 import fr.insalyon.messenger.net.model.AuthenticationMessage;
 import fr.insalyon.messenger.net.model.Message;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
@@ -24,7 +21,7 @@ public class Client {
     public static void main(String[] args) throws IOException {
 
         Socket echoSocket = null;
-        PrintWriter socOut = null;
+        PrintStream socOut = null;
         BufferedReader stdIn = null;
         BufferedReader socIn = null;
         String clientName = null;
@@ -41,7 +38,7 @@ public class Client {
             echoSocket = new Socket(args[0], Integer.parseInt(args[1]));
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
-            socOut = new PrintWriter(echoSocket.getOutputStream());
+            socOut = new PrintStream(echoSocket.getOutputStream());
             System.out.print("Enter your name to log in\n");
             clientName = registerClient();
             stdIn = new BufferedReader(new InputStreamReader(System.in));
@@ -66,7 +63,7 @@ public class Client {
         closeClient(echoSocket, socOut, stdIn, socIn);
     }
 
-    private static void closeClient(Socket echoSocket, PrintWriter socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
+    private static void closeClient(Socket echoSocket, PrintStream socOut, BufferedReader stdIn, BufferedReader socIn) throws IOException {
         socOut.close();
         socIn.close();
         stdIn.close();
