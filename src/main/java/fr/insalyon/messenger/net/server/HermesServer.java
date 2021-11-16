@@ -1,6 +1,11 @@
 package fr.insalyon.messenger.net.server;
 
+import fr.insalyon.messenger.net.model.AuthenticationMessage;
+import fr.insalyon.messenger.net.model.GroupMessage;
+import fr.insalyon.messenger.net.model.Message;
+import fr.insalyon.messenger.net.model.PrivateMessage;
 import fr.insalyon.messenger.net.mongodb.MongoDB;
+import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
@@ -25,10 +30,6 @@ public class HermesServer {
         connections = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
         mongoDB = new MongoDB();
-//        final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
-//                .of(Message.class, "type")
-//                .registerSubtype(GroupMessage.class)
-//                .registerSubtype(PrivateMessage.class);
     }
 
     public void init(int port) throws IOException {
