@@ -20,10 +20,8 @@ public class Client {
     private String clientName;
 
     private Message message = null;
-    final GsonBuilder builder = new GsonBuilder();
-    final Gson gson = builder.create();
-
-
+    final static GsonBuilder builder = new GsonBuilder();
+    final static Gson gson = builder.create();
 
     private boolean running = true;
 
@@ -40,8 +38,8 @@ public class Client {
                     new InputStreamReader(echoSocket.getInputStream()));
             socOut = new PrintStream(echoSocket.getOutputStream());
             System.out.print("Enter your name to log in\n");
-            clientName = registerClient();
             stdIn = new BufferedReader(new InputStreamReader(System.in));
+            clientName = registerClient(stdIn, socOut);
             running = true;
             System.out.print("\nYou are logged in as : "+clientName);
         } catch (UnknownHostException e) {
@@ -58,7 +56,7 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()), line, "some password");
+            message = new Message(clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
             System.out.println("echo: " + socIn.readLine());
         }
@@ -91,10 +89,12 @@ public class Client {
         echoSocket.close();
     }
 
-    private static String registerClient() {
-        Scanner sc= new Scanner(System.in);
-        System.out.print("Please enter your name");
-        String clientName= sc.nextLine();
+    private String registerClient(BufferedReader stdIn, PrintStream socOut) throws IOException {
+        System.out.print("Please enter your name\n");
+        String clientName= stdIn.readLine();
+        message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()));
+        socOut.println(gson.toJson(message));
+        System.out.print("User connected\n");
         return clientName;
     }
 
