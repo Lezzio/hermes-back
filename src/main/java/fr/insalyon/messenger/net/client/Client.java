@@ -1,5 +1,6 @@
 package fr.insalyon.messenger.net.client;
 
+import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.model.AuthenticationMessage;
 import fr.insalyon.messenger.net.model.Message;
 
@@ -24,6 +25,7 @@ public class Client {
     private Message message = null;
     final static GsonBuilder builder = new GsonBuilder();
     final static Gson gson = builder.create();
+    final TypeToken<Message> messageTypeToken = new TypeToken<>() {};
 
     private boolean running = true;
 
@@ -58,7 +60,7 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new TextMessage("Hello", clientName,"user2", new Date(System.currentTimeMillis()));
+            message = new TextMessage(line, clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
             try {
                 System.out.println("echo: " + socIn.readLine());
@@ -101,8 +103,9 @@ public class Client {
         System.out.print("Please enter your name\n");
         String clientName= stdIn.readLine();
         message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()));
-        socOut.println(gson.toJson(message));
+        socOut.println(gson.toJson(message, messageTypeToken.getType()));
         System.out.print("User connected as \n" + clientName);
+        socIn.readLine();
         return clientName;
     }
 
