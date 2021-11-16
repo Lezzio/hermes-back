@@ -20,7 +20,7 @@ public class EchoClient {
     public static void main(String[] args) throws IOException {
 
         Socket echoSocket = null;
-        PrintStream socOut = null;
+        PrintWriter socOut = null;
         BufferedReader stdIn = null;
         BufferedReader socIn = null;
 
@@ -31,10 +31,10 @@ public class EchoClient {
 
         try {
             // creation socket ==> connexion
-            echoSocket = new Socket(args[0], new Integer(args[1]));
+            echoSocket = new Socket(args[0], Integer.parseInt(args[1]));
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
-            socOut = new PrintStream(echoSocket.getOutputStream());
+            socOut = new PrintWriter(echoSocket.getOutputStream());
             stdIn = new BufferedReader(new InputStreamReader(System.in));
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
