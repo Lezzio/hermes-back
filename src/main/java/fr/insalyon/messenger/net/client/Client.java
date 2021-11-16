@@ -1,5 +1,6 @@
 package fr.insalyon.messenger.net.client;
 
+import fr.insalyon.messenger.net.model.AuthenticationMessage;
 import fr.insalyon.messenger.net.model.Message;
 
 import java.io.BufferedReader;
@@ -58,7 +59,7 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new Message(clientName, line, new Date(System.currentTimeMillis()));
+            message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()), line, "some password");
             socOut.println(gson.toJson(message));
             System.out.println("echo: " + socIn.readLine());
         }
