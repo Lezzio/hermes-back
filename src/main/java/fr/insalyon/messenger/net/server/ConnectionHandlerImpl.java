@@ -2,7 +2,12 @@ package fr.insalyon.messenger.net.server;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.model.AuthenticationMessage;
+import fr.insalyon.messenger.net.model.GroupMessage;
+import fr.insalyon.messenger.net.model.Message;
+import fr.insalyon.messenger.net.model.PrivateMessage;
+import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,8 +17,19 @@ import java.net.Socket;
 
 public class ConnectionHandlerImpl implements ConnectionHandler {
 
-    private static final GsonBuilder builder = new GsonBuilder();
-    private static final Gson gson = builder.create();
+    private static final Gson gson;
+    final TypeToken<Message> messageTypeToken = new TypeToken<>() {};
+
+    static {
+        final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
+                .of(Message.class, "type")
+                .registerSubtype(GroupMessage.class)
+                .registerSubtype(PrivateMessage.class)
+                .registerSubtype(AuthenticationMessage.class);
+        gson = new GsonBuilder()
+                .registerTypeAdapterFactory(typeFactory)
+                .create();
+    }
 
     @Override
     public void handleConnection(HermesServer hermesServer, Socket socket) {
@@ -25,9 +41,13 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             while (true) {
                 System.out.println("received message");
                 String line = socIn.readLine();
-                hermesServer.mongoDB.insertLogMessage(line);
-                AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
-                System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
+//                hermesServer.mongoDB.insertLogMessage(line);
+
+                Message message = gson.fromJson(line, messageTypeToken.getType());
+                System.out.println("Message = " + message + " class = " + message.getClass());
+
+//                AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
+//                System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
                 socOut.println(line);
             }
         } catch (IOException exception) {
