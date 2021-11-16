@@ -18,6 +18,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             while (true) {
                 System.out.println("received info");
                 String line = socIn.readLine();
+                hermesServer.saveMessage(line);
                 socOut.println(line);
             }
         } catch (IOException exception) {
