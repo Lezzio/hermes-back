@@ -3,7 +3,6 @@ package fr.insalyon.messenger.net.client;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.model.ConnectionMessage;
-import fr.insalyon.messenger.net.model.DisconnectionMessage;
 import fr.insalyon.messenger.net.model.Message;
 import fr.insalyon.messenger.net.model.TextMessage;
 
@@ -23,8 +22,17 @@ import com.google.gson.GsonBuilder;
  */
 public class HermesClient {
 
-    final static GsonBuilder builder = new GsonBuilder();
-    final static Gson gson = builder.create();
+    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {};
+    private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
+            .of(Message.class, "type")
+            .registerSubtype(GroupMessage.class)
+            .registerSubtype(PrivateMessage.class)
+            .registerSubtype(AuthenticationMessage.class)
+            .registerSubtype(TextMessage.class)
+            .registerSubtype(ConnectionMessage.class);
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapterFactory(typeFactory)
+            .create();
 
     private String username;
     /**
@@ -133,21 +141,21 @@ public class HermesClient {
     public void sendMessage(String message) {
         if(socket != null){
             TextMessage fullMessage = new TextMessage(message,this.username,"use3", new Date(System.currentTimeMillis()));
-            outStream.println(gson.toJson(fullMessage));
+            outStream.println(gson.toJson(fullMessage, messageTypeToken.getType()));
         }
     }
 
     public void sendConnection(){
         if(socket != null){
             ConnectionMessage msg = new ConnectionMessage(this.username,"", new Date(System.currentTimeMillis()));
-            outStream.println(gson.toJson(msg));
+            outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
     }
 
     public void sendDisconnection(){
         if(socket != null){
             DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date(System.currentTimeMillis()));
-            outStream.println(gson.toJson(msg));
+            outStream.println(gson.toJson(msg, messageTypeToken.getType())));
         }
     }
 
@@ -161,7 +169,6 @@ public class HermesClient {
             socket.close();
             inStream.close();
             outStream.close();
-            sendDisconnection();
         }catch(IOException e){
             System.out.println(e);
         }
