@@ -24,7 +24,7 @@ public class HermesServer {
 
     public void init(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
-
+        running = true;
         while (running) {
             Socket socket = serverSocket.accept();
             executorService.submit(() -> connectionHandler.handleConnection(socket));
@@ -33,6 +33,21 @@ public class HermesServer {
 
     public Map<String, Socket> getConnections() {
         return connections;
+    }
+
+    public static void main(String ... args) {
+        if (args.length != 1) {
+            System.out.println("Usage: java EchoServer <EchoServer port>");
+            System.exit(1);
+        }
+        HermesServer listenSocket = new HermesServer(
+        ); //port
+        try {
+            listenSocket.init(Integer.parseInt(args[0]));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }
