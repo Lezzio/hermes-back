@@ -1,7 +1,5 @@
 package fr.insalyon.messenger.net.server;
 
-import fr.insalyon.messenger.net.mongodb.MongoDB;
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -25,6 +23,10 @@ public class HermesServer {
         connections = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
         mongoDB = new MongoDB();
+//        final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
+//                .of(Message.class, "type")
+//                .registerSubtype(GroupMessage.class)
+//                .registerSubtype(PrivateMessage.class);
     }
 
     public void init(int port) throws IOException {
