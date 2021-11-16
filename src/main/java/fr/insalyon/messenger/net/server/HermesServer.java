@@ -34,6 +34,16 @@ public class HermesServer {
         }
     }
 
+    public void broadcastMessage(String content){
+        connections.forEach( (id, socket) -> {
+            try {
+                PrintStream socOut = new PrintStream(socket.getOutputStream());
+                socOut.println(content);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+    }
     public void addClient(String name, Socket socket) {
         connections.put(name, socket);
     }

@@ -58,7 +58,7 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new TextMessage("Hello", clientName,"user2", new Date(System.currentTimeMillis()));
+            message = new TextMessage(line, clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
             try {
                 System.out.println("echo: " + socIn.readLine());
@@ -103,6 +103,7 @@ public class Client {
         message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()));
         socOut.println(gson.toJson(message));
         System.out.print("User connected as \n" + clientName);
+        socIn.readLine();
         return clientName;
     }
 

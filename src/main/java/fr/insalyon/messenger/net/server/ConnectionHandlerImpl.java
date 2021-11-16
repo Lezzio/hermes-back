@@ -15,11 +15,11 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             BufferedReader socIn = null;
             socIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintStream socOut = new PrintStream(socket.getOutputStream());
+            hermesServer.addClient(socket.toString(),socket);
             while (true) {
-                System.out.println("received info");
                 String line = socIn.readLine();
                 hermesServer.saveMessage(line);
-                socOut.println(line);
+                hermesServer.broadcastMessage(line);
             }
         } catch (IOException exception) {
             exception.printStackTrace();
