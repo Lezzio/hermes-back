@@ -20,6 +20,7 @@ public class HermesServer {
 
     public HermesServer() {
         connections = new HashMap<>();
+        connectionHandler = new ConnectionHandlerImpl();
     }
 
     public void init(int port) throws IOException {
@@ -56,14 +57,12 @@ public class HermesServer {
             System.out.println("Usage: java EchoServer <EchoServer port>");
             System.exit(1);
         }
-        HermesServer listenSocket = new HermesServer(
-        ); //port
         try {
+        HermesServer listenSocket = new HermesServer(); //port
             listenSocket.init(Integer.parseInt(args[0]));
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
 }
