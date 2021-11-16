@@ -26,6 +26,7 @@ public class Client {
         PrintWriter socOut = null;
         BufferedReader stdIn = null;
         BufferedReader socIn = null;
+        String clientName = null;
         Message message = null;
         final GsonBuilder builder = new GsonBuilder();
         final Gson gson = builder.create();
@@ -34,17 +35,16 @@ public class Client {
             System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port>");
             System.exit(1);
         }
-
-        String clientName = registerClient();
-
         try {
             // creation socket ==> connexion
             echoSocket = new Socket(args[0], Integer.parseInt(args[1]));
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
             socOut = new PrintWriter(echoSocket.getOutputStream());
+            System.out.print("Enter your name to log in\n");
+            clientName = registerClient();
             stdIn = new BufferedReader(new InputStreamReader(System.in));
-            System.out.print("You are logged in as : "+clientName);
+            System.out.print("\nYou are logged in as : "+clientName);
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + args[0]);
             System.exit(1);
