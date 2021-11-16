@@ -52,6 +52,11 @@ public class HermesClient {
         this.username = username;
     }
 
+    /**
+     *
+     * @param args 0 => server address 1=> server port 2=> client username
+     * @throws IOException
+     */
     public static void main(String[] args) throws IOException {
         System.out.println("launching hermesClient");
         if (args.length != 3) {
@@ -119,6 +124,8 @@ public class HermesClient {
 
     /**
      * Allows the client to send messages to the server
+     * Wraps the content of the message with other
+     * informations
      * @param message
      */
     public void sendMessage(String message) {
