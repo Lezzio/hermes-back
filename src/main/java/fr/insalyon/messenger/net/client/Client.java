@@ -16,11 +16,16 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class Client {
-    protected Socket echoSocket = null;
-    protected PrintWriter socOut = null;
-    protected BufferedReader stdIn = null;
-    protected BufferedReader socIn = null;
+    private Socket echoSocket = null;
+    private PrintWriter socOut = null;
+    private BufferedReader stdIn = null;
+    private BufferedReader socIn = null;
+    private String clientName;
+
     private Message message = null;
+
+    final GsonBuilder builder = new GsonBuilder();
+    final Gson gson = builder.create();
 
     private boolean running = true;
 
@@ -29,17 +34,18 @@ public class Client {
     }
 
     public void init(String serverHost, int serverPort) throws IOException {
-        String clientName = registerClient();
         running = false;
         try {
             // creation socket ==> connexion
             echoSocket = new Socket(serverHost, serverPort);
             socIn = new BufferedReader(
                     new InputStreamReader(echoSocket.getInputStream()));
-            socOut = new PrintWriter(echoSocket.getOutputStream());
+            socOut = new PrintStream(echoSocket.getOutputStream());
+            System.out.print("Enter your name to log in\n");
+            clientName = registerClient();
             stdIn = new BufferedReader(new InputStreamReader(System.in));
             running = true;
-            System.out.print("You are logged in as : "+clientName);
+            System.out.print("\nYou are logged in as : "+clientName);
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + serverHost);
             System.exit(1);
@@ -91,7 +97,6 @@ public class Client {
         Scanner sc= new Scanner(System.in);
         System.out.print("Please enter your name");
         String clientName= sc.nextLine();
-        System.out.print("You are logged in as : "+clientName);
         return clientName;
     }
 
