@@ -4,6 +4,6 @@ import java.net.Socket;
 
 public interface ConnectionHandler {
 
-    public void handleConnection(Socket socket);
+    public void handleConnection(HermesServer hermesServer, Socket socket);
 
 }

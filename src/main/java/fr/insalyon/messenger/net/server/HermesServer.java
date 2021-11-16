@@ -23,12 +23,28 @@ public class HermesServer {
     }
 
     public void init(int port) throws IOException {
-        this.serverSocket = new ServerSocket(port);
+        serverSocket = new ServerSocket(port);
 
         while (running) {
             Socket socket = serverSocket.accept();
-            executorService.submit(() -> connectionHandler.handleConnection(socket));
+            executorService.submit(() -> connectionHandler.handleConnection(this, socket));
         }
+    }
+
+    public void addClient(String name, Socket socket) {
+        connections.put(name, socket);
+    }
+
+    public void removeClient(String name) {
+        connections.remove(name);
+    }
+
+    public void stop() throws IOException {
+        running = false;
+        for (Socket socket : connections.values()) {
+            socket.close();
+        }
+        serverSocket.close();
     }
 
     public Map<String, Socket> getConnections() {
