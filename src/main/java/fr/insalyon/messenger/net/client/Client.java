@@ -12,6 +12,7 @@ import java.util.Scanner;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.insalyon.messenger.net.model.TextMessage;
 
 public class Client {
     private Socket echoSocket = null;
@@ -57,7 +58,7 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new Message(clientName,"user2", new Date(System.currentTimeMillis()));
+            message = new TextMessage("Hello", clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
             try {
                 System.out.println("echo: " + socIn.readLine());
@@ -101,7 +102,7 @@ public class Client {
         String clientName= stdIn.readLine();
         message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()));
         socOut.println(gson.toJson(message));
-        System.out.print("User connected\n");
+        System.out.print("User connected as \n" + clientName);
         return clientName;
     }
 
