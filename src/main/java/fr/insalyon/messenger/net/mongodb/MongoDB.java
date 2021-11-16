@@ -2,17 +2,14 @@ package fr.insalyon.messenger.net.mongodb;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.*;
 
 import org.bson.Document;
 
 
 public class MongoDB {
 
-    private final ConnectionString connectionString = new ConnectionString("mongodb+srv://root:root@cluster0.h6mqd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+    private final ConnectionString connectionString = new ConnectionString("mongodb+srv://admin:admin@cluster0.h6mqd.mongodb.net/hermes?retryWrites=true&w=majority");
     private final MongoClientSettings SETTING = MongoClientSettings.builder()
             .applyConnectionString(connectionString)
             .build();
@@ -26,7 +23,7 @@ public class MongoDB {
 
     public void insertLogMessage(String msg){
         System.out.println(msg);
-        MongoCollection<Document> logs = database.getCollection("log");
+        MongoCollection<Document> logs = database.getCollection("test");
         System.out.println(msg);
         Document doc = Document.parse(msg);
         System.out.println(msg);
