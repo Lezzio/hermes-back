@@ -2,9 +2,7 @@ package fr.insalyon.messenger.net.client;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import fr.insalyon.messenger.net.model.ConnectionMessage;
-import fr.insalyon.messenger.net.model.Message;
-import fr.insalyon.messenger.net.model.TextMessage;
+import fr.insalyon.messenger.net.model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -14,8 +12,8 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 /**
  * Client permettant l'interaction avec le serveur
@@ -155,7 +153,7 @@ public class HermesClient {
     public void sendDisconnection(){
         if(socket != null){
             DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date(System.currentTimeMillis()));
-            outStream.println(gson.toJson(msg, messageTypeToken.getType())));
+            outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
     }
 

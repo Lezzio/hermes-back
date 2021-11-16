@@ -4,7 +4,12 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.*;
 
+import com.mongodb.client.model.Filters;
+import fr.insalyon.messenger.net.model.ConnectionMessage;
 import org.bson.Document;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MongoDB {
@@ -47,16 +52,24 @@ public class MongoDB {
         logs.insertOne(Document.parse(msg));
     }
 
-    public void insertUser(String msg){
+    public void insertUser(ConnectionMessage msg){
         MongoCollection<Document> logs = database.getCollection("users");
-        logs.insertOne(Document.parse(msg));
+        Document name = new Document("userName", msg.getName());
+        logs.insertOne(name);
     }
+
+    public String searchUser(String name) {
+        Document result = database.getCollection("users").find(Filters.eq("userName", name)).first();
+        if(result != null){
+            return result.getString("userName");
+        }
+        return null;
+    }
+
 
     public void insertChats(String msg){
         MongoCollection<Document> logs = database.getCollection("chats");
         logs.insertOne(Document.parse(msg));
     }
-
-
 
 }

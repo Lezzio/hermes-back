@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
+import java.util.Date;
 
 public class ConnectionHandlerImpl implements ConnectionHandler {
 
@@ -38,17 +39,28 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                 System.out.println("received message");
                 Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
 
-//                hermesServer.broadcastMessage(line);
-//                hermesServer.mongoDB.insertLogMessage(line);
                 System.out.println("Message = " + message);
-                System.out.println("Deserialized = " + receivedMessage + " name = " + receivedMessage.getClass().getName());
+                System.out.println("Deserialized = " + receivedMessage + " name = " + receivedMessage.getClass().getSimpleName());
 
-//                Message message = gson.fromJson(line, messageTypeToken.getType());
-//                System.out.println("Message = " + message + " class = " + message.getClass());
+                switch (receivedMessage.getClass().getSimpleName()){
+                    case "ConnectionMessage" :
+                        ConnectionMessage msg = (ConnectionMessage) receivedMessage;
+                        String user = hermesServer.mongoDB.searchUser(msg.getName());
+                        if(user == null){
+                            hermesServer.mongoDB.insertUser(msg);
+                            user = msg.getName();
+                        }
+                        hermesServer.addClient(user, socket);
 
-//                AuthenticationMessage authenticationMessage = gson.fromJson(line, AuthenticationMessage.class);
-//                System.out.println("Authentication : username = " + authenticationMessage.getSender() + " password = " + authenticationMessage.getPassword());
-                socOut.println(message);
+                        TextMessage fullMessage = new TextMessage("Connection Success","server",user, new Date(System.currentTimeMillis()));
+                        socOut.println(gson.toJson(fullMessage, messageTypeToken.getType()));
+
+
+                        break;
+                    default:
+                        socOut.println(message);
+                        break;
+                }
             }
         } catch (IOException exception) {
             exception.printStackTrace();
@@ -56,5 +68,6 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             System.out.println(e);
         }
     }
+
 
 }
