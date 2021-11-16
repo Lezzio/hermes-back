@@ -1,5 +1,8 @@
 package fr.insalyon.messenger.net.server;
 
+import com.google.gson.TypeAdapterFactory;
+import fr.insalyon.messenger.net.model.Message;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -23,6 +26,10 @@ public class HermesServer {
     public HermesServer() {
         connections = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
+        final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
+                .of(Message.class, "type")
+                .registerSubtype(GroupMessage.class)
+                .registerSubtype(PrivateMessage.class);
     }
 
     public void init(int port) throws IOException {
