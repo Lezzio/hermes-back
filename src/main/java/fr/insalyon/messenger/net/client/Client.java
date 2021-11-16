@@ -5,6 +5,7 @@ import fr.insalyon.messenger.net.model.Message;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
@@ -58,7 +59,13 @@ public class Client {
             if (line.equals(".")) break;
             message = new Message(clientName,"user2", new Date(System.currentTimeMillis()));
             socOut.println(gson.toJson(message));
-            System.out.println("echo: " + socIn.readLine());
+            try {
+                System.out.println("echo: " + socIn.readLine());
+            } catch (SocketException e) {
+                System.err.println(e.getMessage());
+                System.exit(1);
+            }
+
         }
         closeClient(echoSocket, socOut, stdIn, socIn);
     }
