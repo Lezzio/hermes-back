@@ -1,5 +1,7 @@
 package fr.insalyon.messenger.net.server;
 
+import fr.insalyon.messenger.net.mongodb.MongoDB;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,18 +13,18 @@ import java.util.concurrent.Executors;
 public class HermesServer {
 
     public static final int SYSTEM_CORES = Runtime.getRuntime().availableProcessors();
-    public static final String LOG_FILE = "log/log.json";
-
 
     private final Map<String, Socket> connections;
     private ServerSocket serverSocket;
     private boolean running;
     private ConnectionHandler connectionHandler;
     private final ExecutorService executorService = Executors.newFixedThreadPool(SYSTEM_CORES);
+    protected MongoDB mongoDB;
 
     public HermesServer() {
         connections = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
+        mongoDB = new MongoDB();
     }
 
     public void init(int port) throws IOException {
@@ -52,17 +54,6 @@ public class HermesServer {
 
     public Map<String, Socket> getConnections() {
         return connections;
-    }
-
-    public void saveMessage(String msg){
-        try {
-            File logFile = new File(LOG_FILE);
-            PrintWriter logWriter = new PrintWriter(new FileOutputStream(logFile, true), true);
-            logWriter.append(msg + "\n");
-            logWriter.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
     }
 
     public static void main(String ... args) {
