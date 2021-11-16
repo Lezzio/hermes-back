@@ -1,5 +1,6 @@
 package fr.insalyon.messenger.net.client;
 
+import fr.insalyon.messenger.net.model.AuthenticationMessage;
 import fr.insalyon.messenger.net.model.Message;
 
 import java.io.BufferedReader;
@@ -10,6 +11,9 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Scanner;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 public class Client {
     protected Socket echoSocket = null;
@@ -35,6 +39,7 @@ public class Client {
             socOut = new PrintWriter(echoSocket.getOutputStream());
             stdIn = new BufferedReader(new InputStreamReader(System.in));
             running = true;
+            System.out.print("You are logged in as : "+clientName);
         } catch (UnknownHostException e) {
             System.err.println("Don't know about host:" + serverHost);
             System.exit(1);
@@ -49,8 +54,8 @@ public class Client {
         while (true) {
             line = stdIn.readLine();
             if (line.equals(".")) break;
-            message = new Message(clientName, line, new Date(System.currentTimeMillis()));
-            socOut.println(message.JSONserializer());
+            message = new AuthenticationMessage(clientName, "to someone", new Date(System.currentTimeMillis()), line, "some password");
+            socOut.println(gson.toJson(message));
             System.out.println("echo: " + socIn.readLine());
         }
         closeClient(echoSocket, socOut, stdIn, socIn);

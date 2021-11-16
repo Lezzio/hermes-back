@@ -2,20 +2,15 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 public class Message {
 
-    private String sender;
-    private String content;
-    private Date time;
-    final GsonBuilder builder = new GsonBuilder();
-    final Gson gson = builder.create();
+    private final String sender;
+    private final String destination;
+    private final Date time;
 
-    public Message(String sender, String content, Date time) {
+    public Message(String sender, String destination, Date time) {
         this.sender = sender;
-        this.content = content;
+        this.destination = destination;
         this.time = time;
     }
 
@@ -23,15 +18,12 @@ public class Message {
         return sender;
     }
 
-    public String getContent() {
-        return content;
+    public String getDestination() {
+        return destination;
     }
 
     public Date getTime() {
         return time;
     }
 
-    public String JSONserializer(){
-        return gson.toJson(this);
-    }
 }
