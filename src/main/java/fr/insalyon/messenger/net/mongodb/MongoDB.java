@@ -4,7 +4,9 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+
 import org.bson.Document;
+
 
 public class MongoDB {
     private final MongoClient MONGOCLIENT = MongoClients.create("mongodb+srv://admin:root@cluster0.h6mqd.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
