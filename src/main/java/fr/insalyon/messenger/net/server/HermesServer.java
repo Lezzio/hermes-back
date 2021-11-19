@@ -1,17 +1,14 @@
 package fr.insalyon.messenger.net.server;
 
-import fr.insalyon.messenger.net.model.AuthenticationMessage;
-import fr.insalyon.messenger.net.model.GroupMessage;
-import fr.insalyon.messenger.net.model.Message;
-import fr.insalyon.messenger.net.model.PrivateMessage;
 import fr.insalyon.messenger.net.mongodb.MongoDB;
-import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,6 +17,8 @@ public class HermesServer {
     public static final int SYSTEM_CORES = Runtime.getRuntime().availableProcessors();
 
     private final Map<String, Socket> connections;
+    private final Map<String, List<String>> chats;
+
     private ServerSocket serverSocket;
     private boolean running;
     private ConnectionHandler connectionHandler;
@@ -28,6 +27,7 @@ public class HermesServer {
 
     public HermesServer() {
         connections = new HashMap<>();
+        chats = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
         mongoDB = new MongoDB();
     }
@@ -67,6 +67,20 @@ public class HermesServer {
         serverSocket.close();
     }
 
+    public void addChat(String id, List<String> users){chats.put(id, users);}
+
+    public void removeChat(String id) {chats.remove(id);}
+
+    public void addChatUser(String id,String user){
+        chats.get(id).add(user);
+    }
+
+    public List<String> getChat(String name){
+        return chats.get(name);
+    }
+
+
+
     public Map<String, Socket> getConnections() {
         return connections;
     }
@@ -84,4 +98,7 @@ public class HermesServer {
         }
     }
 
+    public void removeChatUser(String chatName, String sender) {
+        chats.get(chatName).removeIf(value -> Objects.equals(value, sender));
+    }
 }

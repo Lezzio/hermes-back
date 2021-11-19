@@ -27,7 +27,8 @@ public class HermesClient {
             .registerSubtype(PrivateMessage.class)
             .registerSubtype(AuthenticationMessage.class)
             .registerSubtype(TextMessage.class)
-            .registerSubtype(ConnectionMessage.class);
+            .registerSubtype(ConnectionMessage.class)
+            .registerSubtype(DisconnectionMessage.class);
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(typeFactory)
             .create();
@@ -98,6 +99,8 @@ public class HermesClient {
             String message;
             while ((message = inStream.readLine()) != null) {
                 System.out.println("message received");
+                Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
+                if(receivedMessage.getClass().getSimpleName().equals("DisconnectionMessage")) break; //TODO kill client
                 hClient.messageReceived(message);
             }
         } catch (IOException e) {
@@ -105,6 +108,7 @@ public class HermesClient {
         } catch (Exception e) {
             System.out.println(e);
         }
+        //TODO : kill of Connection reset
     }
 
     public void senderThread(HermesClient hClient, PrintStream outStream){
@@ -113,7 +117,7 @@ public class HermesClient {
         try {
             while (true) {
                 line = stdIn.readLine();
-                if (line.equals(".")) break;
+                if (line.equals("exit")) { sendDisconnection(); }
                 sendMessage(line);
             }
         }catch(Exception e){
@@ -138,7 +142,7 @@ public class HermesClient {
      */
     public void sendMessage(String message) {
         if(socket != null){
-            TextMessage fullMessage = new TextMessage(message,this.username,"use3", new Date(System.currentTimeMillis()));
+            TextMessage fullMessage = new TextMessage(message,this.username,"server", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(fullMessage, messageTypeToken.getType()));
         }
     }

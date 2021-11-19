@@ -2,7 +2,7 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
-public class DeleteChat extends Message{
+public class DeleteChat extends Message {
 
     private String chatName;
 

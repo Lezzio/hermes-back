@@ -10,4 +10,8 @@ public class CreateChat extends Message{
         super(sender, destination, time);
         this.chatName = chatName;
     }
+
+    public String getName() {
+        return this.chatName;
+    }
 }
