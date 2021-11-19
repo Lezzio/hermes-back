@@ -23,4 +23,8 @@ public class LogChat {
     public List<String> getUsers() {
         return this.users;
     }
+
+    public void setTextMessage(TextMessage textMessage) {
+        this.message = message;
+    }
 }

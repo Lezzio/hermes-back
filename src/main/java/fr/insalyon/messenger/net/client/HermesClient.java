@@ -128,10 +128,21 @@ public class HermesClient {
                         } else {
                             if(Objects.equals(alertConnected.getSender(), currentChat.getChatName())){
                                 userConnected.put(alertConnected.getUserConnected(),true);
-                                //TODO: update
+                                //TODO: list connected update
                             }
                         }
                         break;
+                    case "AlertDisconnected":
+                        AlertDisconnected alertDisconnected = (AlertDisconnected) receivedMessage;
+                        if(Objects.equals(alertDisconnected.getSender(), currentChat.getChatName())){
+                            userConnected.put(alertDisconnected.getUserDisconnected(),false);
+                            //TODO: list connected update
+                        }
+                        break;
+                    case "AddUserChat" :
+                        AddUserChat addUserChat = (AddUserChat) receivedMessage;
+                        break;
+
                     case "GetChats" :
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
@@ -152,6 +163,49 @@ public class HermesClient {
                         userConnected = getUsers.getUsersConnected();
                         //TODO : update page
                         break;
+                    case "AlertMessage":
+                        AlertMessage alertMessage = (AlertMessage) receivedMessage;
+                        //TODO display l'alert
+                        break;
+                    case "CreateChat" :
+                        CreateChat createChat = (CreateChat) receivedMessage;
+                        if(createChat.getState()){
+                            List<String> users= new ArrayList<>();
+                            users.add(this.username);
+                            LogChat logChat = new LogChat(createChat.getName(), users, new TextMessage("Chat create",createChat.getName(), createChat.getName(),  new Date(System.currentTimeMillis())));
+                            chats.add(logChat);
+                            accessChat(logChat.getName());
+                        } else {
+                            //TODO: display alert
+                        }
+                        break;
+                    case "DisconnectionMessage":
+                        DisconnectionMessage disconnectionMessage = (DisconnectionMessage) receivedMessage;
+                        this.isConnected = false;
+                        //TODO deco and delete this user
+                        break;
+                    case "LeaveChat":
+                        LeaveChat leaveChat = (LeaveChat) receivedMessage;
+                        if(Objects.equals(leaveChat.getName(), this.currentChat.getChatName())){
+                            userConnected.remove(leaveChat.getSender());
+                        }
+                        break;
+                    case "UpdateChat":
+                        UpdateChat updateChat = (UpdateChat) receivedMessage;
+                        break;
+                    case "TextMessage":
+                        TextMessage textMessage = (TextMessage) receivedMessage;
+                        if(Objects.equals(textMessage.getSender(), currentChat.getChatName())){
+                            currentChat.add(textMessage);
+                            //TODO update
+                        } else {
+                            for(LogChat chat : chats){
+                                if(chat.getName().equals(textMessage.getSender())){
+                                    chat.setTextMessage(textMessage);
+                                }
+                            }
+                            //TODO update order
+                        }
                     default :
                         break;
                 }
@@ -166,6 +220,7 @@ public class HermesClient {
         }
         //TODO : kill of Connection reset
     }
+
 
     private void getUsers(String chatName) {
         if(socket != null){

@@ -34,4 +34,8 @@ public class AccessChat extends Message {
     public void setAdmin(String admin) {
         this.admin = admin;
     }
+
+    public void add(TextMessage textMessage) {
+        messages.add(textMessage);
+    }
 }

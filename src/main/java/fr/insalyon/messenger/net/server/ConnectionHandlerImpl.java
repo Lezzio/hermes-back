@@ -65,10 +65,22 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.mongoDB.insertLog(new TextMessage("Deconnection", user, "server", new Date(System.currentTimeMillis())));
                         DisconnectionMessage deco = new DisconnectionMessage("sender", new Date(System.currentTimeMillis()));
                         socOut.println(gson.toJson(deco, messageTypeToken.getType()));
+
+                        List<LogChat> logchats =  hermesServer.mongoDB.getChats(decoMsg.getSender());
+                        for(LogChat logChat : logchats){
+                            for(String userInChat: logChat.getUsers()){
+                                if(hermesServer.getConnections().containsKey(userInChat)){
+                                    AlertDisconnected alertDisconnected = new AlertDisconnected(decoMsg.getSender(),logChat.getName(),userInChat , new Date(System.currentTimeMillis()));
+                                    new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(alertDisconnected, messageTypeToken.getType()));
+                                }
+                            }
+                        }
+
+
                         break;
                     case "GetChats":
                         GetChats getChats = (GetChats) receivedMessage;
-                        List<LogChat> logchats =  hermesServer.mongoDB.getChats(getChats.getSender());
+                        logchats =  hermesServer.mongoDB.getChats(getChats.getSender());
                         for(LogChat logChat : logchats){
                             hermesServer.addChat(logChat.getName(), logChat.getUsers());
                             for(String userInChat: logChat.getUsers()){
@@ -119,16 +131,16 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                     case "CreateChat":
                         CreateChat createChat = (CreateChat) receivedMessage;
                         String chat = hermesServer.mongoDB.searchChat(createChat.getName());
-                        TextMessage fullMessage;
+                        createChat = new CreateChat(createChat.getDestination(), createChat.getSender(), new Date(System.currentTimeMillis()), createChat.getName());
                         if(chat == null){
                             hermesServer.mongoDB.insertChat(createChat);
                             chat = createChat.getName();
                             hermesServer.addChatUser(chat, createChat.getSender());
-                            fullMessage = new TextMessage("Creation chat success","server", createChat.getSender(), new Date(System.currentTimeMillis()));
+                            createChat.setState(true);
                         }  else {
-                            fullMessage = new TextMessage("Creation chat failed","server", createChat.getSender(), new Date(System.currentTimeMillis()));
+                            createChat.setState(false);
                         }
-                        socOut.println(gson.toJson(fullMessage, messageTypeToken.getType()));
+                        socOut.println(gson.toJson(createChat, messageTypeToken.getType()));
                         hermesServer.mongoDB.insertLog(new TextMessage("creates chat "+ createChat.getName(), createChat.getSender(), "server", new Date(System.currentTimeMillis())));
                         break;
                     case "LeaveChat":
@@ -137,7 +149,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.mongoDB.removeChatUser(leaveChat.getName(), leaveChat.getSender());
                         for(String userInChat : hermesServer.getChat(leaveChat.getName())){
                             if(hermesServer.getConnections().containsKey(userInChat)){
-                                fullMessage = new TextMessage(leaveChat.getSender() +" has left",leaveChat.getName(), userInChat, new Date(System.currentTimeMillis()));
+                                new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(leaveChat, messageTypeToken.getType()));
+                                TextMessage fullMessage = new TextMessage(leaveChat.getSender() +" has left",leaveChat.getName(), userInChat, new Date(System.currentTimeMillis()));
                                 new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(fullMessage, messageTypeToken.getType()));
                             }
                         }
@@ -154,6 +167,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                             }
                             hermesServer.updateChat(updateChat.getChatName(), updateChat.getDestination());
                             hermesServer.mongoDB.insertLog(new TextMessage("updates chat "+ updateChat.getDestination(), updateChat.getSender(), updateChat.getDestination(), new Date(System.currentTimeMillis())));
+                            //TODO : send message to update
                         } else {
                             AlertMessage alert = new AlertMessage("Modification error", updateChat.getDestination(), updateChat.getSender(), new Date(System.currentTimeMillis()));
                             hermesServer.mongoDB.insertLog(new TextMessage("fails to update chat "+ updateChat.getDestination(), updateChat.getSender(), updateChat.getDestination(), new Date(System.currentTimeMillis())));
