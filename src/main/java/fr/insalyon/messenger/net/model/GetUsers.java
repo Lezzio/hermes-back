@@ -16,4 +16,8 @@ public class GetUsers extends Message {
     public void setConnected(Map<String, Boolean> connected) {
         this.connected = connected;
     }
+
+    public Map<String, Boolean> getUsersConnected() {
+        return connected;
+    }
 }

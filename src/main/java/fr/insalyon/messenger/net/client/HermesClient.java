@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.Socket;
-import java.util.Date;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -30,6 +30,7 @@ public class HermesClient {
             .registerSubtype(AuthenticationMessage.class)
             .registerSubtype(TextMessage.class)
             .registerSubtype(ConnectionMessage.class)
+            .registerSubtype(AlertConnected.class)
             .registerSubtype(DisconnectionMessage.class);
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(typeFactory)
@@ -55,12 +56,25 @@ public class HermesClient {
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
 
+    private List<LogChat> chats;
+    private AccessChat currentChat;
+    private Map<String, Boolean> userConnected;
+    private boolean isConnected;
+    private boolean isLoaded;
+
+
+
     /**
      * HermesClient constructor
      *
      */
     public HermesClient(String username) {
         this.username = username;
+        this.chats = new ArrayList<>();
+        this.currentChat = null;
+        this.userConnected = new HashMap<>();
+        this.isConnected = false;
+        this.isLoaded = false;
     }
 
     /**
@@ -100,8 +114,50 @@ public class HermesClient {
         try {
             String message;
             while ((message = inStream.readLine()) != null) {
-                System.out.println("message received");
-                hClient.messageReceived(message);
+                Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
+
+                System.out.println("Message = " + message);
+                System.out.println("Deserialized = " + receivedMessage + " name = " + receivedMessage.getClass().getSimpleName());
+
+                switch(receivedMessage.getClass().getSimpleName()){
+                    case "AlertConnected" :
+                        AlertConnected alertConnected = (AlertConnected) receivedMessage;
+                        if(Objects.equals(alertConnected.getUserConnected(), username) && Objects.equals(alertConnected.getSender(), "server")){
+                            isConnected = true;
+                            getChats();
+                        } else {
+                            if(Objects.equals(alertConnected.getSender(), currentChat.getChatName())){
+                                userConnected.put(alertConnected.getUserConnected(),true);
+                                //TODO: update
+                            }
+                        }
+                        break;
+                    case "GetChats" :
+                        GetChats getChats = (GetChats) receivedMessage;
+                        chats = getChats.getChats();
+                        if(chats.size()!=0){
+                            accessChat(chats.get(0).getName());
+                        } else {
+                            isLoaded = true; //TODO : update page
+                        }
+                        break;
+                    case "AccessChat" :
+                        AccessChat accessChat = (AccessChat) receivedMessage;
+                        currentChat = accessChat;
+                        getUsers(currentChat.getChatName());
+                        break;
+                    case "GetUsers":
+                        GetUsers getUsers = (GetUsers) receivedMessage;
+                        isLoaded =true;
+                        userConnected = getUsers.getUsersConnected();
+                        //TODO : update page
+                        break;
+                    default :
+                        break;
+                }
+
+
+
             }
         } catch (IOException e) {
             System.out.println(e);
@@ -109,6 +165,28 @@ public class HermesClient {
             System.out.println(e);
         }
         //TODO : kill of Connection reset
+    }
+
+    private void getUsers(String chatName) {
+        if(socket != null){
+            GetUsers getUsers = new GetUsers(this.username,chatName, new Date(System.currentTimeMillis()));
+            outStream.println(gson.toJson(getUsers, messageTypeToken.getType()));
+        }
+    }
+
+    private void accessChat(String name) {
+        if(socket != null){
+            isLoaded =false;
+            AccessChat accessChat = new AccessChat(this.username,"server", new Date(System.currentTimeMillis()), name);
+            outStream.println(gson.toJson(accessChat, messageTypeToken.getType()));
+        }
+    }
+
+    private void getChats() {
+        if(socket != null){
+            GetChats getChats = new GetChats(this.username,"server", new Date(System.currentTimeMillis()));
+            outStream.println(gson.toJson(getChats, messageTypeToken.getType()));
+        }
     }
 
     public void senderThread(HermesClient hClient, PrintStream outStream){

@@ -20,4 +20,8 @@ public class GetChats extends Message {
     public void setLogChat(List<LogChat> logchats) {
         this.logChats = logchats;
     }
+
+    public List<LogChat> getChats() {
+        return logChats;
+    }
 }

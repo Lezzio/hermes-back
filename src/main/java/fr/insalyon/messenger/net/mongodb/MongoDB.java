@@ -71,6 +71,24 @@ public class MongoDB {
         return null;
     }
 
+    public void insertLog(TextMessage msg){
+        MongoCollection<Document> logs = database.getCollection("log");
+        Document log = new Document("content", msg.getContent());
+        log.append("sender", msg.getSender());
+        log.append("destination", msg.getDestination());
+        log.append("time", msg.getTime().getTime());
+        logs.insertOne(log);
+    }
+
+    public void insertMessages(TextMessage msg){
+        MongoCollection<Document> logs = database.getCollection("messages");
+        Document log = new Document("content", msg.getContent());
+        log.append("sender", msg.getSender());
+        log.append("destination", msg.getDestination());
+        log.append("time", msg.getTime().getTime());
+        logs.insertOne(log);
+    }
+
     public void insertChat(CreateChat chat) {
         MongoCollection<Document> logs = database.getCollection("chats");
         Document chats = new Document("chatName", chat.getName());

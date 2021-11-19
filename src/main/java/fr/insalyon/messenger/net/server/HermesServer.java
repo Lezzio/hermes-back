@@ -101,4 +101,9 @@ public class HermesServer {
     public void removeChatUser(String chatName, String sender) {
         chats.get(chatName).removeIf(value -> Objects.equals(value, sender));
     }
+
+    public void updateChat(String newChatName, String oldChatName) {
+        chats.put(newChatName, chats.get(oldChatName));
+        chats.remove(oldChatName);
+    }
 }
