@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import com.google.gson.GsonBuilder;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
@@ -20,7 +21,8 @@ import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
  */
 public class HermesClient {
 
-    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {};
+    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {
+    };
     private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
             .of(Message.class, "type")
             .registerSubtype(GroupMessage.class)
@@ -69,13 +71,13 @@ public class HermesClient {
     public static void main(String[] args) throws IOException {
         System.out.println("launching hermesClient");
         if (args.length != 3) {
-            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port> <EchoClient username>");
+            System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
             System.exit(1);
         }
         HermesClient hClient = new HermesClient(args[2]);
-        try{
+        try {
             hClient.connect(args[0], Integer.parseInt(args[1]));
-        }catch(Exception e ){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
@@ -99,8 +101,6 @@ public class HermesClient {
             String message;
             while ((message = inStream.readLine()) != null) {
                 System.out.println("message received");
-                Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
-                if(receivedMessage.getClass().getSimpleName().equals("DisconnectionMessage")) break; //TODO kill client
                 hClient.messageReceived(message);
             }
         } catch (IOException e) {
@@ -120,7 +120,7 @@ public class HermesClient {
                 if (line.equals("exit")) { sendDisconnection(); }
                 sendMessage(line);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
@@ -128,6 +128,7 @@ public class HermesClient {
     /**
      * Event triggered on message received
      * Used in the listening thread
+     *
      * @param message
      */
     public void messageReceived(String message) {
@@ -138,6 +139,7 @@ public class HermesClient {
      * Allows the client to send messages to the server
      * Wraps the content of the message with other
      * informations
+     *
      * @param message
      */
     public void sendMessage(String message) {
@@ -147,15 +149,15 @@ public class HermesClient {
         }
     }
 
-    public void sendConnection(){
-        if(socket != null){
-            ConnectionMessage msg = new ConnectionMessage(this.username,"", new Date(System.currentTimeMillis()));
+    public void sendConnection() {
+        if (socket != null) {
+            ConnectionMessage msg = new ConnectionMessage(this.username, "", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
     }
 
-    public void sendDisconnection(){
-        if(socket != null){
+    public void sendDisconnection() {
+        if (socket != null) {
             DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
@@ -164,14 +166,15 @@ public class HermesClient {
     /**
      * Permet de fermet les flux et de terminer la
      * connexion avec le serveur
+     *
      * @throws IOException
      */
     public void closeClient() throws IOException {
-        try{
+        try {
             socket.close();
             inStream.close();
             outStream.close();
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println(e);
         }
     }
