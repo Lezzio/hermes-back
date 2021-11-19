@@ -1,6 +1,9 @@
 package fr.insalyon.messenger.net.multicastclient;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.client.HermesClient;
+import fr.insalyon.messenger.net.model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,21 +12,38 @@ import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.gson.GsonBuilder;
+import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
+
+
 public class MultiCastClient {
 
+    private final String username;
     private MulticastSocket socket;
     private int port;
     private InetAddress group;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
+    private static final TypeToken<MultiCastMessage> messageTypeToken = new TypeToken<>() {
+    };
 
-    public MultiCastClient(String ip, int port) throws IOException {
+    private static final RuntimeTypeAdapterFactory<MultiCastMessage> typeFactory = RuntimeTypeAdapterFactory
+            .of(MultiCastMessage.class, "type")
+            .registerSubtype(MultiCastMessage.class);
+
+    private static final Gson gson = new GsonBuilder()
+            .registerTypeAdapterFactory(typeFactory)
+            .create();
+
+    public MultiCastClient(String ip, int port, String username) throws IOException {
         this.port = port;
         this.socket = new MulticastSocket(port);
         this.group = InetAddress.getByName(ip);
+        this.username = username;
 
     }
 
@@ -33,13 +53,18 @@ public class MultiCastClient {
         executorService.submit(() -> senderThread());
     }
 
+    public void disconnect() {
+        this.socket.disconnect();
+        executorService.shutdown();
+    }
+
     public static void main(String[] args) throws IOException {
         System.out.println("launching multi cast client");
-        if (args.length != 2) {
-            System.out.println("Usage: java MultiCastClient <group ip> <port>");
+        if (args.length != 3) {
+            System.out.println("Usage: java MultiCastClient <group ip> <port> <username>");
             System.exit(1);
         }
-        MultiCastClient multiCastClient = new MultiCastClient(args[0],Integer.parseInt(args[1]));
+        MultiCastClient multiCastClient = new MultiCastClient(args[0], Integer.parseInt(args[1]), args[2]);
         try {
             multiCastClient.connect();
         } catch (Exception e) {
@@ -48,9 +73,9 @@ public class MultiCastClient {
     }
 
 
-    public void listenerThread(){
+    public void listenerThread() {
         try {
-            for(;;) {
+            for (; ; ) {
                 byte[] buffer = new byte[256];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.socket.receive(packet);
@@ -68,7 +93,7 @@ public class MultiCastClient {
         try {
             while (true) {
                 line = stdIn.readLine();
-                if (line.equals(".")) break;
+                if (line.equals(".")) disconnect();
                 sendMessage(line);
             }
         } catch (Exception e) {
@@ -87,8 +112,14 @@ public class MultiCastClient {
     }
 
     public void sendMessage(String message) throws IOException {
-        DatagramPacket hi = new DatagramPacket(message.getBytes(), message.length(),
-                this.group, this.port);
-        this.socket.send(hi);
+        if (socket != null) {
+            MultiCastMessage fullMessage = new MultiCastMessage(message, this.username, new Date(System.currentTimeMillis()));
+            String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
+            DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
+                    this.group, this.port);
+            this.socket.send(packetToSend);
+        }
     }
 }
+
+
