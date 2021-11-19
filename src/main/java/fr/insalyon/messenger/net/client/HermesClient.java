@@ -12,15 +12,17 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import com.google.gson.GsonBuilder;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 /**
- * Client permettant l'interaction avec le serveur
+ * Client allowing us to interact with the server.
  */
 public class HermesClient {
 
-    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {};
+    private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {
+    };
     private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
             .of(Message.class, "type")
             .registerSubtype(GroupMessage.class)
@@ -54,32 +56,32 @@ public class HermesClient {
 
     /**
      * HermesClient constructor
-     *
      */
     public HermesClient(String username) {
         this.username = username;
     }
 
     /**
-     *
      * @param args 0 => server address 1=> server port 2=> client username
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
         System.out.println("launching hermesClient");
         if (args.length != 3) {
-            System.out.println("Usage: java EchoClient <EchoServer host> <EchoServer port> <EchoClient username>");
+            System.out.println("Usage: java HermesClient <HermesServer host> <HermesServer port> <HermesClient username>");
             System.exit(1);
         }
         HermesClient hClient = new HermesClient(args[2]);
-        try{
+        try {
             hClient.connect(args[0], Integer.parseInt(args[1]));
-        }catch(Exception e ){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
+
     /**
      * Permet de connecter le client au serveur Hermes.
+     *
      * @param serverHost IP du serveur
      * @param serverPort Port du serveur
      * @throws IOException
@@ -88,12 +90,11 @@ public class HermesClient {
         socket = new Socket(serverHost, serverPort);
         inStream = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         outStream = new PrintStream(socket.getOutputStream());
-        executorService.submit(() -> listenerThread(this,inStream));
-        executorService.submit(() -> senderThread(this,outStream));
-        sendConnection();
+        executorService.submit(() -> listenerThread(this, inStream));
+        executorService.submit(() -> senderThread(this, outStream));
     }
 
-    public void listenerThread (HermesClient hClient, BufferedReader inStream){
+    public void listenerThread(HermesClient hClient, BufferedReader inStream) {
         try {
             String message;
             while ((message = inStream.readLine()) != null) {
@@ -107,7 +108,8 @@ public class HermesClient {
         }
     }
 
-    public void senderThread(HermesClient hClient, PrintStream outStream){
+    public void senderThread(HermesClient hClient, PrintStream outStream) {
+        sendConnection();
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         String line;
         try {
@@ -116,7 +118,7 @@ public class HermesClient {
                 if (line.equals(".")) break;
                 sendMessage(line);
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             System.out.println(e);
         }
     }
@@ -124,6 +126,7 @@ public class HermesClient {
     /**
      * Event triggered on message received
      * Used in the listening thread
+     *
      * @param message
      */
     public void messageReceived(String message) {
@@ -134,24 +137,25 @@ public class HermesClient {
      * Allows the client to send messages to the server
      * Wraps the content of the message with other
      * informations
+     *
      * @param message
      */
     public void sendMessage(String message) {
-        if(socket != null){
-            TextMessage fullMessage = new TextMessage(message,this.username,"use3", new Date(System.currentTimeMillis()));
+        if (socket != null) {
+            TextMessage fullMessage = new TextMessage(message, this.username, "use3", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(fullMessage, messageTypeToken.getType()));
         }
     }
 
-    public void sendConnection(){
-        if(socket != null){
-            ConnectionMessage msg = new ConnectionMessage(this.username,"", new Date(System.currentTimeMillis()));
+    public void sendConnection() {
+        if (socket != null) {
+            ConnectionMessage msg = new ConnectionMessage(this.username, "", new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
     }
 
-    public void sendDisconnection(){
-        if(socket != null){
+    public void sendDisconnection() {
+        if (socket != null) {
             DisconnectionMessage msg = new DisconnectionMessage(this.username, new Date(System.currentTimeMillis()));
             outStream.println(gson.toJson(msg, messageTypeToken.getType()));
         }
@@ -160,14 +164,15 @@ public class HermesClient {
     /**
      * Permet de fermet les flux et de terminer la
      * connexion avec le serveur
+     *
      * @throws IOException
      */
     public void closeClient() throws IOException {
-        try{
+        try {
             socket.close();
             inStream.close();
             outStream.close();
-        }catch(IOException e){
+        } catch (IOException e) {
             System.out.println(e);
         }
     }
