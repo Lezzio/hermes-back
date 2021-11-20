@@ -106,6 +106,15 @@ public class MongoDB {
         database.getCollection("chats").updateOne(Filters.eq("chatName", chatName), updates, options);
     }
 
+    public void banChatUser(String chatName, String user) {
+        Bson updates = Updates.combine(Updates.pull("users", user));
+        UpdateOptions options = new UpdateOptions().upsert(true);
+        database.getCollection("chats").updateOne(Filters.eq("chatName", chatName), updates, options);
+    }
+
+
+
+
     public Chat getChat(String chatName) {
         Document result = database.getCollection("chats").find(Filters.eq("chatName", chatName)).first();
         if(result != null){
@@ -137,8 +146,8 @@ public class MongoDB {
         database.getCollection("chats").updateOne(Filters.eq("chatName", name), updates, options);
     }
 
-    public boolean updateChat(UpdateChat updateChat) {
-        if(!Objects.equals(updateChat.getChatName(), updateChat.getDestination())) {
+    public boolean updateChat(UpdateChat updateChat, boolean nameChanged) {
+        if(nameChanged) {
             Document result = database.getCollection("chats").find(Filters.eq("chatName", updateChat.getChatName())).first();
             if (result != null) {
                 return false;
@@ -148,5 +157,42 @@ public class MongoDB {
         UpdateOptions options = new UpdateOptions().upsert(true);
         database.getCollection("chats").updateOne(Filters.eq("chatName", updateChat.getChatName()), updates, options);
         return true;
+    }
+
+    public void insertNotification(Notification notification) {
+        MongoCollection<Document> logs = database.getCollection("notifications");
+        Document log = new Document("content", notification.getContent());
+        log.append("sender", notification.getSender());
+        log.append("destination", notification.getDestination());
+        log.append("time", notification.getTime().getTime());
+        log.append("type", notification.getType());
+        logs.insertOne(log);
+    }
+
+
+    public List<Notification> getNotifications(String user) {
+        FindIterable<Document> result = database.getCollection("notifications").find(Filters.eq("destination", user)).sort(new BasicDBObject("time", 1));
+        List<Notification> notifications = new ArrayList<Notification>();
+        for(Document doc: result){
+            notifications.add(
+                    new Notification(doc.getString("content"),
+                            doc.getString("sender"),
+                            doc.getString("destination"),
+                            new Date(doc.getLong("time")),
+                            doc.getString("type"))
+            );
+        }
+        return notifications;
+    }
+
+    public List<String> getUsersAddable(List<String> currentUsers) {
+        FindIterable<Document> result = database.getCollection("users").find();
+        List<String> users = new ArrayList<String>();
+        for(Document doc : result) {
+            if(!currentUsers.contains(doc.getString("userName"))){
+                users.add(doc.getString("userName"));
+            }
+        }
+        return users;
     }
 }

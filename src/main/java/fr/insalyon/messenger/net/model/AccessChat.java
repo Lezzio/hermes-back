@@ -38,4 +38,8 @@ public class AccessChat extends Message {
     public void add(TextMessage textMessage) {
         messages.add(textMessage);
     }
+
+    public void setName(String chatName) {
+        this.chatName = chatName;
+    }
 }

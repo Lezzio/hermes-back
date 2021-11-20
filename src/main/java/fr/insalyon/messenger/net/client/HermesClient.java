@@ -61,6 +61,8 @@ public class HermesClient {
     private Map<String, Boolean> userConnected;
     private boolean isConnected;
     private boolean isLoaded;
+    private List<Notification> notifications;
+    private List<String> currentUserAddable;
 
 
 
@@ -75,6 +77,8 @@ public class HermesClient {
         this.userConnected = new HashMap<>();
         this.isConnected = false;
         this.isLoaded = false;
+        this.notifications = new ArrayList<>();
+        this.currentUserAddable = new ArrayList<>();
     }
 
     /**
@@ -139,10 +143,34 @@ public class HermesClient {
                             //TODO: list connected update
                         }
                         break;
+                    case "AddNotification":
+                        AddNotification addNotification = (AddNotification) receivedMessage;
+                        notifications.add(addNotification);
+                        chats.add(addNotification.getChat());
+                        //TODO update notification and list chat panel
+                        break;
+                    case "BanNotification":
+                        BanNotification banNotification = (BanNotification) receivedMessage;
+                        notifications.add(banNotification);
+                        chats.removeIf(chat -> Objects.equals(chat.getName(), banNotification.getSender()));
+                        //TODO update notification and list chat panel
+                        if(Objects.equals(currentChat.getChatName(), banNotification.getSender())){
+                            accessChat(chats.get(0).getName());
+                        }
+                        break;
                     case "AddUserChat" :
                         AddUserChat addUserChat = (AddUserChat) receivedMessage;
                         break;
-
+                    case "GetNotifications":
+                        GetNotifications getNotifications = (GetNotifications) receivedMessage;
+                        this.notifications = getNotifications.getNotifications();
+                        //todo update
+                        break;
+                    case "GetUsersAddable":
+                        GetUsersAddable getUsersAddable = (GetUsersAddable) receivedMessage;
+                        currentUserAddable = getUsersAddable.getUsers();
+                        //TODO update
+                        break;
                     case "GetChats" :
                         GetChats getChats = (GetChats) receivedMessage;
                         chats = getChats.getChats();
@@ -192,10 +220,30 @@ public class HermesClient {
                         break;
                     case "UpdateChat":
                         UpdateChat updateChat = (UpdateChat) receivedMessage;
+                        boolean nameChanged = false;
+                        if(!Objects.equals(updateChat.getChatName(), updateChat.getDestination())){
+                            nameChanged = true;
+                        }
+                        for(LogChat chat : chats){
+                            if(chat.getName().equals(updateChat.getDestination())){
+                                if(nameChanged){
+                                    chat.setName(updateChat.getChatName());
+
+                                }
+                            }
+                        }
+                        if(Objects.equals(currentChat.getChatName(), updateChat.getDestination())){
+                            if(nameChanged){
+                                currentChat.setName(updateChat.getChatName());
+                            }
+                            currentChat.setAdmin(updateChat.getAdmin());
+                        }
+                        //TODO updateChat name if needed in currentChat and list chats
+                        //TODO update access if admin have changed
                         break;
                     case "TextMessage":
                         TextMessage textMessage = (TextMessage) receivedMessage;
-                        if(Objects.equals(textMessage.getSender(), currentChat.getChatName())){
+                        if(Objects.equals(textMessage.getDestination(), currentChat.getChatName())){
                             currentChat.add(textMessage);
                             //TODO update
                         } else {

@@ -7,7 +7,6 @@ public class LogChat {
     private List<String> users;
     private TextMessage message;
     private int usersNumber;
-    private String admin;
 
     public LogChat(String name, List<String> users, TextMessage message) {
         this.name = name;
@@ -27,4 +26,10 @@ public class LogChat {
     public void setTextMessage(TextMessage textMessage) {
         this.message = message;
     }
+
+    public void setName(String chatName) {
+        this.name = chatName;
+    }
+
+
 }
