@@ -7,7 +7,6 @@ import java.util.List;
 public class GetChats extends Message {
     private List<LogChat> logChats;
 
-
     public GetChats(String sender, String destination, Date time) {
         super(sender, destination, time);
         this.logChats = new ArrayList<LogChat>();

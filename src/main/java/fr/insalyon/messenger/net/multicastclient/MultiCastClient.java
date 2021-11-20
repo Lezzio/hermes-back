@@ -2,13 +2,11 @@ package fr.insalyon.messenger.net.multicastclient;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import fr.insalyon.messenger.net.client.HermesClient;
 import fr.insalyon.messenger.net.model.*;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
@@ -68,7 +66,7 @@ public class MultiCastClient {
         try {
             multiCastClient.connect();
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -97,7 +95,7 @@ public class MultiCastClient {
                 sendMessage(line);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            e.printStackTrace();
         }
     }
 
