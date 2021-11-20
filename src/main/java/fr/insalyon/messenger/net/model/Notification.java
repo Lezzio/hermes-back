@@ -3,17 +3,17 @@ package fr.insalyon.messenger.net.model;
 import java.util.Date;
 
 public class Notification extends Message{
-    private String type;
+    private String typeNotification;
     private String content;
 
-    public Notification(String content, String sender, String destination, Date time, String type) {
+    public Notification(String content, String sender, String destination, Date time, String typeNotification) {
         super(sender, destination, time);
-        this.type = type;
+        this.typeNotification = typeNotification;
         this.content = content;
     }
 
     public String getType() {
-        return type;
+        return typeNotification;
     }
 
     public String getContent() {

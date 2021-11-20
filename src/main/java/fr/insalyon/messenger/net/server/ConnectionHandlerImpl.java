@@ -35,6 +35,9 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             .registerSubtype(AddUserChat.class)
             .registerSubtype(AddNotification.class)
             .registerSubtype(BanUserChat.class)
+            .registerSubtype(BanNotification.class)
+            .registerSubtype(UpdateChat.class)
+            .registerSubtype(LeaveChat.class)
             .registerSubtype(GetUsers.class);
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(typeFactory)
@@ -210,10 +213,13 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
                         hermesServer.removeChatUser(leaveChat.getName(), leaveChat.getSender());
                         hermesServer.mongoDB.removeChatUser(leaveChat.getName(), leaveChat.getSender());
+                        fullMessage = new TextMessage(leaveChat.getSender() +" has left",leaveChat.getName(), leaveChat.getName(), new Date(System.currentTimeMillis()));
+                        hermesServer.mongoDB.insertMessages(fullMessage);
+
+                        socOut.println(gson.toJson(leaveChat, messageTypeToken.getType()));
+
                         for(String userInChat : hermesServer.getChat(leaveChat.getName())){
                             if(hermesServer.getConnections().containsKey(userInChat)){
-                                new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(leaveChat, messageTypeToken.getType()));
-                                fullMessage = new TextMessage(leaveChat.getSender() +" has left",leaveChat.getName(), leaveChat.getName(), new Date(System.currentTimeMillis()));
                                 new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(fullMessage, messageTypeToken.getType()));
                             }
                         }

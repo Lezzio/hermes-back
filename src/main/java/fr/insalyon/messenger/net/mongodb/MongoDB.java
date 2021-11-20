@@ -168,7 +168,7 @@ public class MongoDB {
         }
         Bson updates = Updates.combine(Updates.set("chatName", updateChat.getChatName()), Updates.set("admin", updateChat.getAdmin()));
         UpdateOptions options = new UpdateOptions().upsert(true);
-        database.getCollection("chats").updateOne(Filters.eq("chatName", updateChat.getChatName()), updates, options);
+        database.getCollection("chats").updateOne(Filters.eq("chatName", updateChat.getDestination()), updates, options);
         return true;
     }
 
