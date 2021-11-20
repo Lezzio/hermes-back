@@ -138,10 +138,10 @@ public class MongoDB {
 
     public List<LogChat> getChats(String username) {
         System.out.println("getChats: Username = " + username);
-        FindIterable<Document> result = database.getCollection("chats").find(Filters.eq("users", username)).sort(new BasicDBObject("date_last_messsage", 1));
+        FindIterable<Document> result = database.getCollection("chats").find(Filters.eq("users", username)).sort(new BasicDBObject("date_last_messsage", -1));
         List<LogChat> chatList = new ArrayList<>();
         for (Document doc : result) {
-            Document msg = database.getCollection("messages").find(Filters.eq("chatName", doc.getString("chatName"))).sort(new BasicDBObject("time", 1)).first();
+            Document msg = database.getCollection("messages").find(Filters.eq("chatName", doc.getString("chatName"))).sort(new BasicDBObject("time", -1)).first();
             if(msg != null) {
                 LogChat chat = new LogChat(doc.getString("chatName"), doc.getList("users", String.class), new TextMessage(msg.getString("content"), msg.getString("sender"), msg.getString("destination"), new Date(msg.getLong("time"))));
                 chatList.add(chat);
