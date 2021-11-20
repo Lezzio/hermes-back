@@ -63,6 +63,7 @@ public class HermesClient {
     private boolean isLoaded;
     private List<Notification> notifications;
     private List<String> currentUserAddable;
+    private Date previousConnection;
 
 
 
@@ -79,6 +80,7 @@ public class HermesClient {
         this.isLoaded = false;
         this.notifications = new ArrayList<>();
         this.currentUserAddable = new ArrayList<>();
+        this.previousConnection = null;
     }
 
     /**
@@ -129,6 +131,9 @@ public class HermesClient {
                         if(Objects.equals(alertConnected.getUserConnected(), username) && Objects.equals(alertConnected.getSender(), "server")){
                             isConnected = true;
                             getChats();
+                            if(alertConnected.getPreviousConnection()!=null){
+                                this.previousConnection = alertConnected.getPreviousConnection();
+                            }
                         } else {
                             if(Objects.equals(alertConnected.getSender(), currentChat.getChatName())){
                                 userConnected.put(alertConnected.getUserConnected(),true);

@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import fr.insalyon.messenger.net.model.*;
 import fr.insalyon.messenger.net.model.Chat;
+import fr.insalyon.messenger.net.mongodb.User;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 
 import java.io.BufferedReader;
@@ -48,21 +49,27 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                 switch (receivedMessage.getClass().getSimpleName()){
                     case "ConnectionMessage" :
                         ConnectionMessage msg = (ConnectionMessage) receivedMessage;
-                        String user = hermesServer.mongoDB.searchUser(msg.getName());
+                        User user = hermesServer.mongoDB.searchUser(msg.getName());
+                        String userName = "";
                         if(user == null){
                             hermesServer.mongoDB.insertUser(msg);
-                            user = msg.getName();
+                            userName = msg.getName();
+                        } else {
+                            userName = user.getUsername();
                         }
-                        hermesServer.addClient(user, socket);
-                        hermesServer.mongoDB.insertLog(new TextMessage("Connection", user, "server", new Date(System.currentTimeMillis())));
-                        AlertConnected alertConnected = new AlertConnected(user,"server",user, new Date(System.currentTimeMillis()));
+                        hermesServer.addClient(userName, socket);
+                        hermesServer.mongoDB.insertLog(new TextMessage("Connection", userName, "server", new Date(System.currentTimeMillis())));
+                        AlertConnected alertConnected = new AlertConnected(userName,"server",userName, new Date(System.currentTimeMillis()));
+                        if(user != null){
+                            alertConnected.setPreviousConnection(user.getPreviousConnection());
+                        }
                         socOut.println(gson.toJson(alertConnected, messageTypeToken.getType()));
                         break;
                     case "DeconnectionMessage":
                         DisconnectionMessage decoMsg = (DisconnectionMessage) receivedMessage;
-                        user = decoMsg.getSender();
-                        hermesServer.removeClient(user);
-                        hermesServer.mongoDB.insertLog(new TextMessage("Deconnection", user, "server", new Date(System.currentTimeMillis())));
+                        userName = decoMsg.getSender();
+                        hermesServer.removeClient(userName);
+                        hermesServer.mongoDB.insertLog(new TextMessage("Deconnection", userName, "server", new Date(System.currentTimeMillis())));
                         DisconnectionMessage deco = new DisconnectionMessage("sender", new Date(System.currentTimeMillis()));
                         socOut.println(gson.toJson(deco, messageTypeToken.getType()));
 

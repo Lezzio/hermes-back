@@ -51,13 +51,18 @@ public class MongoDB {
     public void insertUser(ConnectionMessage msg){
         MongoCollection<Document> logs = database.getCollection("users");
         Document name = new Document("userName", msg.getName());
+        name.append("last_connection", (new Date().getTime()));
         logs.insertOne(name);
     }
 
-    public String searchUser(String name) {
+    public User searchUser(String name) {
         Document result = database.getCollection("users").find(Filters.eq("userName", name)).first();
         if(result != null){
-            return result.getString("userName");
+            Bson updates = Updates.combine(Updates.set("last_connection", (new Date().getTime())));
+            UpdateOptions options = new UpdateOptions().upsert(true);
+            database.getCollection("users").updateOne(Filters.eq("userName", name), updates, options);
+
+            return new User(result.getString("userName"), new Date(result.getLong("last_connection")));
         }
         return null;
     }
