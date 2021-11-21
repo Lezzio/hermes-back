@@ -33,21 +33,7 @@ public class MongoDB {
         this.database = MONGOCLIENT.getDatabase("hermes");
     }
 
-    public void insertLogMessage(String msg) {
-        System.out.println(msg);
-        MongoCollection<Document> logs = database.getCollection("test");
-        System.out.println(msg);
-        Document doc = Document.parse(msg);
-        System.out.println(msg);
-        System.out.println(doc.toString());
-        logs.insertOne(doc);
-        try {
-            logs.insertOne(doc);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        System.out.println(msg);
-    }
+
 
     public void insertUser(ConnectionMessage msg) {
         MongoCollection<Document> logs = database.getCollection("users");
@@ -137,7 +123,7 @@ public class MongoDB {
     }
 
     public List<LogChat> getChats(String username) {
-        System.out.println("getChats: Username = " + username);
+        //System.out.println("getChats: Username = " + username);
         FindIterable<Document> result = database.getCollection("chats").find(Filters.eq("users", username)).sort(new BasicDBObject("date_last_messsage", -1));
         List<LogChat> chatList = new ArrayList<>();
         for (Document doc : result) {
@@ -147,9 +133,9 @@ public class MongoDB {
                 chatList.add(chat);
             }
         }
-        chatList.forEach(chat -> {
-            System.out.println(chat.getName());
-        });
+      //  chatList.forEach(chat -> {
+      //      System.out.println(chat.getName());
+      //  });
         return chatList;
     }
 
@@ -165,6 +151,9 @@ public class MongoDB {
             if (result != null) {
                 return false;
             }
+            Bson updates = Updates.combine(Updates.set("chatName", updateChat.getChatName()));
+            UpdateOptions options = new UpdateOptions().upsert(true);
+            database.getCollection("messages").updateMany(Filters.eq("chatName", updateChat.getDestination()), updates, options);
         }
         Bson updates = Updates.combine(Updates.set("chatName", updateChat.getChatName()), Updates.set("admin", updateChat.getAdmin()));
         UpdateOptions options = new UpdateOptions().upsert(true);

@@ -1,8 +1,10 @@
 package fr.insalyon.messenger.net.server;
 
+import fr.insalyon.messenger.net.model.TextMessage;
 import fr.insalyon.messenger.net.mongodb.MongoDB;
 
 import java.io.*;
+import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ public class HermesServer {
     public void init(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
         running = true;
+        System.out.println("Server initialized on [IP] "+ Inet4Address.getLocalHost().getHostAddress()+ " [PORT] "+port);
         while (running) {
             Socket socket = serverSocket.accept();
             executorService.submit(() -> connectionHandler.handleConnection(this, socket));
@@ -51,6 +54,13 @@ public class HermesServer {
             }
         });
     }
+
+    public void logMessage(TextMessage msg){
+        System.out.println("["+msg.getTime()+"] : [FROM] "+msg.getSender()+" [TO] " +msg.getDestination());
+        System.out.println("[CONTENT] " +msg.getContent());
+        System.out.println();
+    }
+
     public void addClient(String name, Socket socket) {
         connections.put(name, socket);
     }
@@ -86,15 +96,28 @@ public class HermesServer {
     }
 
     public static void main(String ... args) {
-        if (args.length != 1) {
-            System.out.println("Usage: java EchoServer <EchoServer port>");
-            System.exit(1);
-        }
+        //if (args.length != 1) {
+        //    System.out.println("Usage: java EchoServer <EchoServer port>");
+        //    System.exit(1);
+        //}
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+
+
         try {
-        HermesServer listenSocket = new HermesServer(); //port
-            listenSocket.init(Integer.parseInt(args[0]));
-        } catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Select the server port :");
+            int serverPort = Integer.parseInt(stdIn.readLine());
+            while(serverPort < 1024 || serverPort> 65535){
+                System.err.println("Error, the port must be an integer between 1024 and 65535");
+                System.out.println("Select the server port :");
+                serverPort = Integer.parseInt(stdIn.readLine());
+            }
+
+            HermesServer listenSocket = new HermesServer(); //port
+            listenSocket.init(serverPort);
+        } catch (IOException e) {
+            System.err.println("Error :"+e.getMessage());
+        } catch (NumberFormatException e) {
+            System.err.println("Error, the port number must be an integer");
         }
     }
 
