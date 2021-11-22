@@ -26,6 +26,8 @@ public class MultiCastClient {
     private InetAddress group;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
+    private boolean isTerminal;
+
     private static final TypeToken<MultiCastMessage> messageTypeToken = new TypeToken<>() {
     };
 
@@ -37,36 +39,58 @@ public class MultiCastClient {
             .registerTypeAdapterFactory(typeFactory)
             .create();
 
-    public MultiCastClient(String ip, int port, String username) throws IOException {
+    public MultiCastClient(String ip, int port, String username, boolean isTerminal) throws IOException {
         this.port = port;
         this.socket = new MulticastSocket(port);
         this.group = InetAddress.getByName(ip);
         this.username = username;
+        this.isTerminal = isTerminal;
 
     }
 
     public void connect() throws IOException {
         this.socket.joinGroup(this.group);
-        executorService.submit(() -> listenerThread());
-        executorService.submit(() -> senderThread());
+        executorService.submit(this::listenerThread);
+        executorService.submit(this::senderThread);
+        if(isTerminal){
+            System.out.println("Join the group "+ this.group.getHostAddress()+ " on the port "+ this.port);
+        }
     }
 
-    public void disconnect() {
-        this.socket.disconnect();
-        executorService.shutdown();
+    public void disconnect() throws IOException {
+        this.socket.leaveGroup(this.group);
+        this.socket.close();
+        System.out.println("Leave the group");
     }
 
     public static void main(String[] args) throws IOException {
-        System.out.println("launching multi cast client");
+        /*System.out.println("launching multi cast client");
         if (args.length != 3) {
             System.out.println("Usage: java MultiCastClient <group ip> <port> <username>");
             System.exit(1);
+        }*/
+
+        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("UserName :");
+        String userName = stdIn.readLine();
+        while(userName.length()<=2){
+            System.err.println("Wrong format, the username should have a length >2");
+            System.out.println("UserName :");
+            userName = stdIn.readLine();
         }
-        MultiCastClient multiCastClient = new MultiCastClient(args[0], Integer.parseInt(args[1]), args[2]);
+        System.out.println("Group IP (IP addresses are in the range 224.0.0.1 to 239.255.255.255):");
+        String host = stdIn.readLine();
+        System.out.println("Group Port :");
+        String port = stdIn.readLine();
+
         try {
+            MultiCastClient multiCastClient = new MultiCastClient(host, Integer.parseInt(port), userName, true);
             multiCastClient.connect();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            System.err.println("Error : could not connect to server " + host + " on port " + Integer.valueOf(port));
+        } catch (NumberFormatException ex) {
+            System.err.println("Error : you must set a correct port number");
         }
     }
 
@@ -74,29 +98,65 @@ public class MultiCastClient {
     public void listenerThread() {
         try {
             for (; ; ) {
-                byte[] buffer = new byte[256];
+                byte[] buffer = new byte[this.socket.getReceiveBufferSize()];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.socket.receive(packet);
                 String msg = new String(buffer, 0, packet.getLength());
                 messageReceived(msg);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            if(!e.getMessage().equals("socket closed")){
+                e.printStackTrace();
+            }
         }
     }
 
     public void senderThread() {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String line;
+        String line="";
         try {
             while (true) {
                 line = stdIn.readLine();
-                if (line.equals(".")) disconnect();
+                if (line.equals("-disconnect") || line.equals("-exit")) break;
                 sendMessage(line);
             }
+
+            if (line.equals("-disconnect") || line.equals("-exit")){
+                disconnect();
+                executorService.shutdownNow();
+            }
+            if(line.equals("-disconnect")){
+                System.out.println("Do you want to join another channel (-join <ip> <port>) or exit (-exit)");
+                line = stdIn.readLine();
+                String[] args = line.split(" ");
+                boolean valid = false;
+                while(!valid) {
+                    if (!args[0].equals("-exit")) {
+                        if (args.length != 3) {
+                            System.err.println("Error : USAGE -join <ip> <port>");
+                        } else {
+                            valid = true;
+                            try {
+                                MultiCastClient multiCastClient = new MultiCastClient(args[1], Integer.parseInt(args[2]), username, true);
+                                multiCastClient.connect();
+                            } catch (IOException ex) {
+                                System.err.println("Error : could not connect to server " + args[1] + " on port " + Integer.valueOf(args[2]));
+                            } catch (NumberFormatException ex) {
+                                System.err.println("Error : you must set a correct port number");
+                            }
+                        }
+                    }
+
+                    if(args[0].equals("-exit")){
+                        valid = true;
+                    }
+                }
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
     /**
@@ -119,5 +179,3 @@ public class MultiCastClient {
         }
     }
 }
-
-
