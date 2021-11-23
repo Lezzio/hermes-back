@@ -10,7 +10,10 @@ import java.io.InputStreamReader;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -28,11 +31,15 @@ public class MultiCastClient {
 
     private boolean isTerminal;
 
+    private List<String> nameInGroup;
+
     private static final TypeToken<MultiCastMessage> messageTypeToken = new TypeToken<>() {
     };
 
     private static final RuntimeTypeAdapterFactory<MultiCastMessage> typeFactory = RuntimeTypeAdapterFactory
             .of(MultiCastMessage.class, "type")
+            .registerSubtype(HelloMultiCastMessage.class)
+            .registerSubtype(ByeMultiCastMessage.class)
             .registerSubtype(MultiCastMessage.class);
 
     private static final Gson gson = new GsonBuilder()
@@ -45,6 +52,7 @@ public class MultiCastClient {
         this.group = InetAddress.getByName(ip);
         this.username = username;
         this.isTerminal = isTerminal;
+        this.nameInGroup = new ArrayList<>();
 
     }
 
@@ -55,13 +63,19 @@ public class MultiCastClient {
         if(isTerminal){
             System.out.println("Join the group "+ this.group.getHostAddress()+ " on the port "+ this.port);
         }
+        sayHello("");
     }
 
+
     public void disconnect() throws IOException {
+        sayGoodBye();
         this.socket.leaveGroup(this.group);
         this.socket.close();
+        this.nameInGroup = new ArrayList<>();
         System.out.println("Leave the group");
     }
+
+
 
     public static void main(String[] args) throws IOException {
         /*System.out.println("launching multi cast client");
@@ -102,10 +116,38 @@ public class MultiCastClient {
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.socket.receive(packet);
                 String msg = new String(buffer, 0, packet.getLength());
-                messageReceived(msg);
+                //messageReceived(msg);
+                MultiCastMessage receivedMessage = gson.fromJson(msg, messageTypeToken.getType());
+
+                //System.out.println(receivedMessage.getClass().getSimpleName());
+                if(receivedMessage.getClass().getSimpleName().equals("HelloMultiCastMessage")){
+                    HelloMultiCastMessage helloMultiCastMessage = (HelloMultiCastMessage) receivedMessage;
+                    if(Objects.equals(helloMultiCastMessage.getDestination(), "")){
+                        System.out.println(helloMultiCastMessage.getSender()+" has join the group");
+                        if(!Objects.equals(helloMultiCastMessage.getSender(), username)){
+                            this.nameInGroup.add(helloMultiCastMessage.getSender());
+                        }
+                        sayHello(helloMultiCastMessage.getSender());
+                    } else if(Objects.equals(helloMultiCastMessage.getDestination(), username)){
+                        this.nameInGroup.add(helloMultiCastMessage.getSender());
+                    }
+                } else if(receivedMessage.getClass().getSimpleName().equals("ByeMultiCastMessage")){
+                    ByeMultiCastMessage byeMultiCastMessage = (ByeMultiCastMessage) receivedMessage;
+                    System.out.println(byeMultiCastMessage.getSender()+" has left the group");
+                    this.nameInGroup.remove(byeMultiCastMessage.getSender());
+                } else {
+                    if(Objects.equals(receivedMessage.getSender(), username)){
+                        System.out.println("Message from me - "+ receivedMessage.getTime());
+                    } else {
+                        System.out.println("Message from " +receivedMessage.getSender() +" - "+ receivedMessage.getTime());
+                    }
+                    System.out.println("Content : "+receivedMessage.getContent());
+                    System.out.println();
+                }
+
             }
         } catch (IOException e) {
-            if(!e.getMessage().equals("socket closed")){
+            if(!e.getMessage().equals("socket closed") && !e.getMessage().equals("Socket is closed")){
                 e.printStackTrace();
             }
         }
@@ -118,7 +160,11 @@ public class MultiCastClient {
             while (true) {
                 line = stdIn.readLine();
                 if (line.equals("-disconnect") || line.equals("-exit")) break;
-                sendMessage(line);
+                if(line.equals("?users")) {
+                    displayUsersInChat();
+                } else {
+                    sendMessage(line);
+                }
             }
 
             if (line.equals("-disconnect") || line.equals("-exit")){
@@ -159,6 +205,14 @@ public class MultiCastClient {
 
     }
 
+    private void displayUsersInChat() {
+        System.out.println("****Chat group composition*****");
+        for(String user : nameInGroup){
+            System.out.println(user);
+        }
+        System.out.println("*******************************");
+    }
+
     /**
      * Event triggered on message received
      * Used in the listening thread
@@ -172,6 +226,26 @@ public class MultiCastClient {
     public void sendMessage(String message) throws IOException {
         if (socket != null) {
             MultiCastMessage fullMessage = new MultiCastMessage(message, this.username, new Date(System.currentTimeMillis()));
+            String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
+            DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
+                    this.group, this.port);
+            this.socket.send(packetToSend);
+        }
+    }
+
+    public void sayHello(String destination) throws IOException {
+        if (socket != null) {
+            HelloMultiCastMessage fullMessage = new HelloMultiCastMessage("Hello", this.username, destination, new Date(System.currentTimeMillis()));
+            String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
+            DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
+                    this.group, this.port);
+            this.socket.send(packetToSend);
+        }
+    }
+
+    private void sayGoodBye() throws IOException {
+        if (socket != null) {
+            ByeMultiCastMessage fullMessage = new ByeMultiCastMessage("Hello", this.username, new Date(System.currentTimeMillis()));
             String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
             DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
                     this.group, this.port);
