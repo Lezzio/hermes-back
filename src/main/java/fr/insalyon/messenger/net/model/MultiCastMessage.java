@@ -18,4 +18,9 @@ public class MultiCastMessage{
         return content;
     }
 
+    public String getSender() { return sender;}
+
+    public Date getTime() {
+        return time;
+    }
 }
