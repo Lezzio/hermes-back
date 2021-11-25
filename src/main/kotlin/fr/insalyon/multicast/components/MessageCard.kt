@@ -12,11 +12,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import javax.swing.text.html.parser.DTDConstants.SYSTEM
 
 enum class MessageType {
     SELF,
-    OTHER
+    OTHER,
+    SYSTEM
 }
 
 data class Message(val author: String, val body: String, val messageType: MessageType)
@@ -43,14 +43,16 @@ fun MessageCard(msg: Message, modifier: Modifier) {
         }
 
         Column {
+            if (msg.messageType != MessageType.SYSTEM) {
                 Text(
                     text = msg.author,
                 )
+            }
             // Add a vertical space between the author and message texts
             Spacer(modifier = Modifier.height(4.dp))
 
             Surface(shape = MaterialTheme.shapes.medium, elevation = 2.dp, color = if(msg.messageType == MessageType.SELF) Color(50, 127, 242) else Color.White) {
-                if (msg.messageType == MessageType.OTHER) {
+                if (msg.messageType == MessageType.OTHER || msg.messageType == MessageType.SYSTEM) {
                     Text(
                         text = msg.body,
                         modifier = Modifier.padding(all = 10.dp),
