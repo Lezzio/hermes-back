@@ -27,7 +27,7 @@ fun App() {
         val appState = rememberSaveable { AppState() }
 
         if (appState.username.value == null) {
-            println("Asking user")
+            println("Asking username and connection information...")
             Row {
                 Row(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
                     globalAskUsernameDialog(appState)
@@ -42,12 +42,7 @@ fun App() {
                 println("User connected as ${appState.username.value}")
             }
 
-//            if (appState.notification.value != null && appState.notification.value?.second == true) {
-//                globalNotification(appState)
-//            }
-
             Row {
-                println("Rendering")
                 currentChatView(appState = appState, Modifier.weight(1F))
                 currentChatUsers(appState = appState)
             }

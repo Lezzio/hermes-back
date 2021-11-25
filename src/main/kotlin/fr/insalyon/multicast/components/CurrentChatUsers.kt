@@ -2,6 +2,8 @@ package fr.insalyon.multicast.components
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.OutlinedButton
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +30,19 @@ fun currentChatUsers(appState: AppState) {
                 )
             }
             Spacer(modifier = Modifier.height(10.dp))
+            OutlinedButton(
+                onClick = {
+                    appState.username.value = null
+                    appState.multicastClient.value?.disconnect()
+                    appState.multicastClient.value = null
+                    appState.connectedGroupUsers.clear()
+                    appState.messages.clear()
+                },
+                border = BorderStroke(1.dp, Color.Black),
+                modifier = Modifier.padding(4.dp).align(Alignment.CenterHorizontally)
+            ) {
+                Text(text = "Leave chat", color = Color.Blue)
+            }
         }
     }
 }
