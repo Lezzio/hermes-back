@@ -72,6 +72,11 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         } else {
                             userName = user.getUsername();
                         }
+
+                        if(hermesServer.getConnections().containsKey(userName)){
+                            socket.close();
+                            return;
+                        }
                         client = userName;
                         hermesServer.addClient(userName, socket);
                         TextMessage logMessage = new TextMessage("Connection", userName, "server", new Date(System.currentTimeMillis()));
