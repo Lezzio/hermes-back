@@ -33,7 +33,7 @@ public class EchoServer {
     }
 
     /**
-     * main method
+     * fr.insalyon.hermes.main method
      *
      * @param EchoServer port
      **/

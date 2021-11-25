@@ -20,6 +20,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.mongodb:mongodb-driver-sync:4.4.0")
     implementation(compose.desktop.currentOs)
+    implementation(group= "org.slf4j", name= "slf4j-log4j12", version= "1.7.29")
 }
 
 tasks.withType<KotlinCompile>() {
@@ -28,7 +29,7 @@ tasks.withType<KotlinCompile>() {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
+        mainClass = "fr.insalyon.hermes.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "hermes-back"

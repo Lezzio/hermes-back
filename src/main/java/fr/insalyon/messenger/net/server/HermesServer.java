@@ -7,12 +7,10 @@ import java.io.*;
 import java.net.Inet4Address;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import fr.insalyon.hermes.AppState;
 
 public class HermesServer {
 
@@ -27,11 +25,32 @@ public class HermesServer {
     private final ExecutorService executorService = Executors.newFixedThreadPool(SYSTEM_CORES);
     protected MongoDB mongoDB;
 
-    public HermesServer() {
+    /**
+     * The application is usable with a desktop and a terminal interface
+     * appState definines the Kotlin front-end interface
+     */
+    private final AppState appState;
+
+
+    public AppState getAppState() {
+        return appState;
+    }
+
+    public HermesServer(AppState appState) {
         connections = new HashMap<>();
         chats = new HashMap<>();
         connectionHandler = new ConnectionHandlerImpl();
         mongoDB = new MongoDB();
+        this.appState = appState;
+
+    }
+
+    /**
+     * Allows you to know if you are using the terminal interface or the Kotlin desktop app
+     * @return true if the desktop interface is used
+     */
+    public boolean isDesktopAppActive() {
+        return appState != null;
     }
 
     public void init(int port) throws IOException {
@@ -56,17 +75,31 @@ public class HermesServer {
     }
 
     public void logMessage(TextMessage msg){
-        System.out.println("["+msg.getTime()+"] : [FROM] "+msg.getSender()+" [TO] " +msg.getDestination());
-        System.out.println("[CONTENT] " +msg.getContent());
-        System.out.println();
+        if(isDesktopAppActive()){
+            appState.getMessages().add(msg);
+        } else {
+            System.out.println("["+msg.getTime()+"] : [FROM] "+msg.getSender()+" [TO] " +msg.getDestination());
+            System.out.println("[CONTENT] " +msg.getContent());
+            System.out.println();
+        }
     }
 
     public void addClient(String name, Socket socket) {
         connections.put(name, socket);
+        if(isDesktopAppActive()){
+            HashMap<String, Socket> newUsers = new HashMap<>(appState.getConnections().getValue());
+            newUsers.put(name, socket);
+            appState.getConnections().setValue(newUsers);
+        }
     }
 
     public void removeClient(String name) {
         connections.remove(name);
+        if(isDesktopAppActive()){
+            HashMap<String, Socket> newUsers = new HashMap<>(appState.getConnections().getValue());
+            newUsers.remove(name);
+            appState.getConnections().setValue(newUsers);
+        }
     }
 
     public void stop() throws IOException {
@@ -96,23 +129,21 @@ public class HermesServer {
     }
 
     public static void main(String ... args) {
-        //if (args.length != 1) {
-        //    System.out.println("Usage: java EchoServer <EchoServer port>");
-        //    System.exit(1);
-        //}
+        if (args.length != 1) {
+            System.out.println("Usage: java EchoServer <EchoServer port>");
+            System.exit(1);
+        }
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
 
         try {
-            System.out.println("Select the server port :");
-            int serverPort = Integer.parseInt(stdIn.readLine());
-            while(serverPort < 1024 || serverPort> 65535){
+            int serverPort = Integer.parseInt(args[0]);
+            if(serverPort < 1024 || serverPort> 65535){
                 System.err.println("Error, the port must be an integer between 1024 and 65535");
-                System.out.println("Select the server port :");
-                serverPort = Integer.parseInt(stdIn.readLine());
+                System.exit(1);
             }
 
-            HermesServer listenSocket = new HermesServer(); //port
+            HermesServer listenSocket = new HermesServer(null);
             listenSocket.init(serverPort);
         } catch (IOException e) {
             System.err.println("Error :"+e.getMessage());

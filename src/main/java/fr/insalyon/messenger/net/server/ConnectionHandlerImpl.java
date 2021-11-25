@@ -7,6 +7,7 @@ import fr.insalyon.messenger.net.model.*;
 import fr.insalyon.messenger.net.model.Chat;
 import fr.insalyon.messenger.net.mongodb.User;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
+import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -151,6 +152,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                                     addUserChat.getChatName(),
                                     addUserChat.getChatName(),
                                     new Date(System.currentTimeMillis()));
+                            fullMessage.setSpecialEvent();
                             hermesServer.mongoDB.insertMessages(fullMessage);
                             for (String userInChat : hermesServer.getChat(addUserChat.getChatName())) {
                                 if (hermesServer.getConnections().containsKey(userInChat)) {
@@ -180,6 +182,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                                 banUserChat.getChatName(),
                                 banUserChat.getChatName(),
                                 new Date(System.currentTimeMillis()));
+                        fullMessage.setSpecialEvent();
                         hermesServer.mongoDB.insertMessages(fullMessage);
                         for (String userInChat : hermesServer.getChat(banUserChat.getChatName())) {
                             if (hermesServer.getConnections().containsKey(userInChat)) {
@@ -215,6 +218,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.removeChatUser(leaveChat.getName(), leaveChat.getSender());
                         hermesServer.mongoDB.removeChatUser(leaveChat.getName(), leaveChat.getSender());
                         fullMessage = new TextMessage(leaveChat.getSender() + " has left", leaveChat.getName(), leaveChat.getName(), new Date(System.currentTimeMillis()));
+                        fullMessage.setSpecialEvent();
                         hermesServer.mongoDB.insertMessages(fullMessage);
 
                         socOut.println(gson.toJson(leaveChat, messageTypeToken.getType()));
@@ -317,7 +321,9 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
         System.out.println("Disconnecting " + username);
         try {
             hermesServer.removeClient(username);
-            hermesServer.mongoDB.insertLog(new TextMessage("Deconnection", username, "server", new Date(System.currentTimeMillis())));
+            TextMessage log = new TextMessage("Deconnection", username, "server", new Date(System.currentTimeMillis()));
+            hermesServer.mongoDB.insertLog(log);
+            hermesServer.logMessage(log);
 
             List<LogChat> logChats = hermesServer.mongoDB.getChats(username);
             for (LogChat logChat : logChats) {

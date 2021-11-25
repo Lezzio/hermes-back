@@ -14,7 +14,7 @@ public class EchoClient {
 
 
     /**
-     * main method
+     * fr.insalyon.hermes.main method
      * accepts a connection, receives a message from client then sends an echo to the client
      **/
     public static void main(String[] args) throws IOException {
