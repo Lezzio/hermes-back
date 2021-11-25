@@ -42,7 +42,6 @@ public class HermesServer {
         connectionHandler = new ConnectionHandlerImpl();
         mongoDB = new MongoDB();
         this.appState = appState;
-
     }
 
     /**
