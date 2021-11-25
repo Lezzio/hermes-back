@@ -40,6 +40,8 @@ fun currentChatView(appState: AppState, modifier: Modifier = Modifier) {
             appState.messages.forEach {
                 val messageType = if (it.sender == appState.username.value) {
                     MessageType.SELF
+                } else if (it.sender == "*") {
+                    MessageType.SYSTEM
                 } else {
                     MessageType.OTHER
                 }
@@ -53,6 +55,7 @@ fun currentChatView(appState: AppState, modifier: Modifier = Modifier) {
                         alignment = when (messageType) {
                             MessageType.SELF -> Alignment.End
                             MessageType.OTHER -> Alignment.Start
+                            else -> Alignment.CenterHorizontally
                         }
                     )
                 )

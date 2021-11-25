@@ -122,21 +122,33 @@ public class MulticastClient {
                 if (receivedMessage instanceof HelloMulticastMessage) {
                     HelloMulticastMessage helloMultiCastMessage = (HelloMulticastMessage) receivedMessage;
                     if (Objects.equals(helloMultiCastMessage.getDestination(), "")) {
-                        System.out.println(helloMultiCastMessage.getSender() + " has joined the group");
+                        String userJoinedStr = helloMultiCastMessage.getSender() + " has joined the group";
+                        System.out.println(userJoinedStr);
                         if (!Objects.equals(helloMultiCastMessage.getSender(), username)) {
                             this.nameInGroup.add(helloMultiCastMessage.getSender());
-                            this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
+                            if (isDesktopActive()) {
+                                this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
+                                MulticastMessage convertedHelloMessage = new MulticastMessage(userJoinedStr, "*", helloMultiCastMessage.getTime());
+                                this.appState.getMessages().add(convertedHelloMessage);
+                            }
                         }
                         sayHello(helloMultiCastMessage.getSender());
                     } else if (Objects.equals(helloMultiCastMessage.getDestination(), username)) {
                         this.nameInGroup.add(helloMultiCastMessage.getSender());
-                        this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
+                        if (isDesktopActive()) {
+                            this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
+                        }
                     }
                 } else if (receivedMessage instanceof ByeMulticastMessage) {
                     ByeMulticastMessage byeMultiCastMessage = (ByeMulticastMessage) receivedMessage;
-                    System.out.println(byeMultiCastMessage.getSender() + " has left the group");
+                    String userLeftStr = byeMultiCastMessage.getSender() + " has left the group";
+                    System.out.println(userLeftStr);
                     this.nameInGroup.remove(byeMultiCastMessage.getSender());
-                    this.appState.getConnectedGroupUsers().remove(byeMultiCastMessage.getSender());
+                    if (isDesktopActive()) {
+                        this.appState.getConnectedGroupUsers().remove(byeMultiCastMessage.getSender());
+                        MulticastMessage convertedByeMessage = new MulticastMessage(userLeftStr, "*", byeMultiCastMessage.getTime());
+                        this.appState.getMessages().add(convertedByeMessage);
+                    }
                 } else {
                     if (Objects.equals(receivedMessage.getSender(), username)) {
                         System.out.println("Message from me - " + receivedMessage.getTime());
