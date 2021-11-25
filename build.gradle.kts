@@ -29,7 +29,7 @@ tasks.withType<KotlinCompile>() {
 
 compose.desktop {
     application {
-        mainClass = "fr.insalyon.hermes.MainKt"
+        mainClass = "fr.insalyon.multicast.MainKt"
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "hermes-back"

@@ -19,53 +19,54 @@ import java.util.concurrent.Executors;
 
 import com.google.gson.GsonBuilder;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
+import fr.insalyon.multicast.AppState;
 
 
-public class MultiCastClient {
+public class MulticastClient {
 
     private final String username;
+    private final AppState appState;
     private MulticastSocket socket;
     private int port;
     private InetAddress group;
     private final ExecutorService executorService = Executors.newFixedThreadPool(2);
-
-    private boolean isTerminal;
-
+    private final boolean isTerminal;
     private List<String> nameInGroup;
-
-    private static final TypeToken<MultiCastMessage> messageTypeToken = new TypeToken<>() {
+    private boolean connected;
+    private static final TypeToken<MulticastMessage> messageTypeToken = new TypeToken<>() {
     };
 
-    private static final RuntimeTypeAdapterFactory<MultiCastMessage> typeFactory = RuntimeTypeAdapterFactory
-            .of(MultiCastMessage.class, "type")
+    private static final RuntimeTypeAdapterFactory<MulticastMessage> typeFactory = RuntimeTypeAdapterFactory
+            .of(MulticastMessage.class, "type")
             .registerSubtype(HelloMultiCastMessage.class)
             .registerSubtype(ByeMultiCastMessage.class)
-            .registerSubtype(MultiCastMessage.class);
+            .registerSubtype(MulticastMessage.class);
 
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapterFactory(typeFactory)
             .create();
 
-    public MultiCastClient(String ip, int port, String username, boolean isTerminal) throws IOException {
-        this.port = port;
-        this.socket = new MulticastSocket(port);
-        this.group = InetAddress.getByName(ip);
+    public MulticastClient(String username, boolean isTerminal, AppState appState) throws IOException {
         this.username = username;
         this.isTerminal = isTerminal;
         this.nameInGroup = new ArrayList<>();
-
+        this.appState = appState;
+        this.connected = false;
     }
 
-    public void connect() throws IOException {
+    public void connect(String ip, int port) throws IOException {
+        this.port = port;
+        this.socket = new MulticastSocket(port);
+        this.group = InetAddress.getByName(ip);
         this.socket.joinGroup(this.group);
         executorService.submit(this::listenerThread);
-        executorService.submit(this::senderThread);
-        if(isTerminal){
-            System.out.println("Join the group "+ this.group.getHostAddress()+ " on the port "+ this.port);
+        if (isTerminal) {
+            executorService.submit(this::senderThread);
+            System.out.println("Join the group " + this.group.getHostAddress() + " on the port " + this.port);
         }
         sayHello("");
+        setConnected(true);
     }
-
 
     public void disconnect() throws IOException {
         sayGoodBye();
@@ -73,9 +74,8 @@ public class MultiCastClient {
         this.socket.close();
         this.nameInGroup = new ArrayList<>();
         System.out.println("Leave the group");
+        setConnected(false);
     }
-
-
 
     public static void main(String[] args) throws IOException {
         /*System.out.println("launching multi cast client");
@@ -85,12 +85,12 @@ public class MultiCastClient {
         }*/
 
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("UserName :");
-        String userName = stdIn.readLine();
-        while(userName.length()<=2){
+        System.out.println("Username :");
+        String username = stdIn.readLine();
+        while (username.length() <= 2) {
             System.err.println("Wrong format, the username should have a length >2");
-            System.out.println("UserName :");
-            userName = stdIn.readLine();
+            System.out.println("Username :");
+            username = stdIn.readLine();
         }
         System.out.println("Group IP (IP addresses are in the range 224.0.0.1 to 239.255.255.255):");
         String host = stdIn.readLine();
@@ -98,8 +98,8 @@ public class MultiCastClient {
         String port = stdIn.readLine();
 
         try {
-            MultiCastClient multiCastClient = new MultiCastClient(host, Integer.parseInt(port), userName, true);
-            multiCastClient.connect();
+            MulticastClient multiCastClient = new MulticastClient(username, true, null);
+            multiCastClient.connect(host, Integer.parseInt(port));
         } catch (IOException ex) {
             ex.printStackTrace();
             System.err.println("Error : could not connect to server " + host + " on port " + Integer.valueOf(port));
@@ -108,83 +108,91 @@ public class MultiCastClient {
         }
     }
 
-
     public void listenerThread() {
         try {
-            for (; ; ) {
+            while (true) {
                 byte[] buffer = new byte[this.socket.getReceiveBufferSize()];
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 this.socket.receive(packet);
                 String msg = new String(buffer, 0, packet.getLength());
                 //messageReceived(msg);
-                MultiCastMessage receivedMessage = gson.fromJson(msg, messageTypeToken.getType());
+                MulticastMessage receivedMessage = gson.fromJson(msg, messageTypeToken.getType());
 
                 //System.out.println(receivedMessage.getClass().getSimpleName());
-                if(receivedMessage.getClass().getSimpleName().equals("HelloMultiCastMessage")){
+                if (receivedMessage instanceof HelloMultiCastMessage) {
                     HelloMultiCastMessage helloMultiCastMessage = (HelloMultiCastMessage) receivedMessage;
-                    if(Objects.equals(helloMultiCastMessage.getDestination(), "")){
-                        System.out.println(helloMultiCastMessage.getSender()+" has join the group");
-                        if(!Objects.equals(helloMultiCastMessage.getSender(), username)){
+                    if (Objects.equals(helloMultiCastMessage.getDestination(), "")) {
+                        System.out.println(helloMultiCastMessage.getSender() + " has joined the group");
+                        if (!Objects.equals(helloMultiCastMessage.getSender(), username)) {
                             this.nameInGroup.add(helloMultiCastMessage.getSender());
                         }
                         sayHello(helloMultiCastMessage.getSender());
-                    } else if(Objects.equals(helloMultiCastMessage.getDestination(), username)){
+                    } else if (Objects.equals(helloMultiCastMessage.getDestination(), username)) {
                         this.nameInGroup.add(helloMultiCastMessage.getSender());
                     }
-                } else if(receivedMessage.getClass().getSimpleName().equals("ByeMultiCastMessage")){
+                } else if (receivedMessage instanceof ByeMultiCastMessage) {
                     ByeMultiCastMessage byeMultiCastMessage = (ByeMultiCastMessage) receivedMessage;
-                    System.out.println(byeMultiCastMessage.getSender()+" has left the group");
+                    System.out.println(byeMultiCastMessage.getSender() + " has left the group");
                     this.nameInGroup.remove(byeMultiCastMessage.getSender());
                 } else {
-                    if(Objects.equals(receivedMessage.getSender(), username)){
-                        System.out.println("Message from me - "+ receivedMessage.getTime());
+                    if (Objects.equals(receivedMessage.getSender(), username)) {
+                        System.out.println("Message from me - " + receivedMessage.getTime());
                     } else {
-                        System.out.println("Message from " +receivedMessage.getSender() +" - "+ receivedMessage.getTime());
+                        System.out.println("Message from " + receivedMessage.getSender() + " - " + receivedMessage.getTime());
                     }
-                    System.out.println("Content : "+receivedMessage.getContent());
+                    if (isDesktopActive()) {
+                        appState.getMessages().add(receivedMessage);
+                    }
+                    System.out.println("Content : " + receivedMessage.getContent());
                     System.out.println();
                 }
 
             }
         } catch (IOException e) {
-            if(!e.getMessage().equals("socket closed") && !e.getMessage().equals("Socket is closed")){
+            if (!e.getMessage().equals("socket closed") && !e.getMessage().equals("Socket is closed")) {
                 e.printStackTrace();
             }
         }
     }
 
+    private boolean isDesktopActive() {
+        return !isTerminal && appState != null;
+    }
+
     public void senderThread() {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-        String line="";
+        String line = "";
         try {
             while (true) {
                 line = stdIn.readLine();
                 if (line.equals("-disconnect") || line.equals("-exit")) break;
-                if(line.equals("?users")) {
+                if (line.equals("?users")) {
                     displayUsersInChat();
                 } else {
                     sendMessage(line);
                 }
             }
 
-            if (line.equals("-disconnect") || line.equals("-exit")){
+            if (line.equals("-disconnect") || line.equals("-exit")) {
                 disconnect();
                 executorService.shutdownNow();
             }
-            if(line.equals("-disconnect")){
+            if (line.equals("-disconnect")) {
                 System.out.println("Do you want to join another channel (-join <ip> <port>) or exit (-exit)");
                 line = stdIn.readLine();
                 String[] args = line.split(" ");
                 boolean valid = false;
-                while(!valid) {
+                while (!valid) {
                     if (!args[0].equals("-exit")) {
                         if (args.length != 3) {
                             System.err.println("Error : USAGE -join <ip> <port>");
                         } else {
                             valid = true;
                             try {
-                                MultiCastClient multiCastClient = new MultiCastClient(args[1], Integer.parseInt(args[2]), username, true);
-                                multiCastClient.connect();
+                                MulticastClient multiCastClient = new MulticastClient(username, true, null);
+                                String ip = args[1];
+                                int port = Integer.parseInt(args[2]);
+                                multiCastClient.connect(ip, port);
                             } catch (IOException ex) {
                                 System.err.println("Error : could not connect to server " + args[1] + " on port " + Integer.valueOf(args[2]));
                             } catch (NumberFormatException ex) {
@@ -193,7 +201,7 @@ public class MultiCastClient {
                         }
                     }
 
-                    if(args[0].equals("-exit")){
+                    if (args[0].equals("-exit")) {
                         valid = true;
                     }
                 }
@@ -207,7 +215,7 @@ public class MultiCastClient {
 
     private void displayUsersInChat() {
         System.out.println("****Chat group composition*****");
-        for(String user : nameInGroup){
+        for (String user : nameInGroup) {
             System.out.println(user);
         }
         System.out.println("*******************************");
@@ -225,7 +233,7 @@ public class MultiCastClient {
 
     public void sendMessage(String message) throws IOException {
         if (socket != null) {
-            MultiCastMessage fullMessage = new MultiCastMessage(message, this.username, new Date(System.currentTimeMillis()));
+            MulticastMessage fullMessage = new MulticastMessage(message, this.username, new Date(System.currentTimeMillis()));
             String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
             DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
                     this.group, this.port);
@@ -252,4 +260,13 @@ public class MultiCastClient {
             this.socket.send(packetToSend);
         }
     }
+
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public void setConnected(boolean connected) {
+        this.connected = connected;
+    }
+
 }

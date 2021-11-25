@@ -2,7 +2,7 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
-public class HelloMultiCastMessage extends MultiCastMessage {
+public class HelloMultiCastMessage extends MulticastMessage {
 
     private String destination;
 
