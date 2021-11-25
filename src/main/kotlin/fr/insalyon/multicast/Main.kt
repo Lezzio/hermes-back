@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import fr.insalyon.messenger.net.multicastclient.MulticastClient
+import fr.insalyon.multicast.components.currentChatUsers
 import fr.insalyon.multicast.components.currentChatView
 import fr.insalyon.multicast.dialog.globalAskUsernameDialog
 
@@ -46,7 +47,9 @@ fun App() {
 //            }
 
             Row {
-                currentChatView(appState = appState)
+                println("Rendering")
+                currentChatView(appState = appState, Modifier.weight(1F))
+                currentChatUsers(appState = appState)
             }
         }
     }

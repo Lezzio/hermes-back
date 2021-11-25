@@ -38,8 +38,8 @@ public class MulticastClient {
 
     private static final RuntimeTypeAdapterFactory<MulticastMessage> typeFactory = RuntimeTypeAdapterFactory
             .of(MulticastMessage.class, "type")
-            .registerSubtype(HelloMultiCastMessage.class)
-            .registerSubtype(ByeMultiCastMessage.class)
+            .registerSubtype(HelloMulticastMessage.class)
+            .registerSubtype(ByeMulticastMessage.class)
             .registerSubtype(MulticastMessage.class);
 
     private static final Gson gson = new GsonBuilder()
@@ -119,21 +119,24 @@ public class MulticastClient {
                 MulticastMessage receivedMessage = gson.fromJson(msg, messageTypeToken.getType());
 
                 //System.out.println(receivedMessage.getClass().getSimpleName());
-                if (receivedMessage instanceof HelloMultiCastMessage) {
-                    HelloMultiCastMessage helloMultiCastMessage = (HelloMultiCastMessage) receivedMessage;
+                if (receivedMessage instanceof HelloMulticastMessage) {
+                    HelloMulticastMessage helloMultiCastMessage = (HelloMulticastMessage) receivedMessage;
                     if (Objects.equals(helloMultiCastMessage.getDestination(), "")) {
                         System.out.println(helloMultiCastMessage.getSender() + " has joined the group");
                         if (!Objects.equals(helloMultiCastMessage.getSender(), username)) {
                             this.nameInGroup.add(helloMultiCastMessage.getSender());
+                            this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
                         }
                         sayHello(helloMultiCastMessage.getSender());
                     } else if (Objects.equals(helloMultiCastMessage.getDestination(), username)) {
                         this.nameInGroup.add(helloMultiCastMessage.getSender());
+                        this.appState.getConnectedGroupUsers().add(helloMultiCastMessage.getSender());
                     }
-                } else if (receivedMessage instanceof ByeMultiCastMessage) {
-                    ByeMultiCastMessage byeMultiCastMessage = (ByeMultiCastMessage) receivedMessage;
+                } else if (receivedMessage instanceof ByeMulticastMessage) {
+                    ByeMulticastMessage byeMultiCastMessage = (ByeMulticastMessage) receivedMessage;
                     System.out.println(byeMultiCastMessage.getSender() + " has left the group");
                     this.nameInGroup.remove(byeMultiCastMessage.getSender());
+                    this.appState.getConnectedGroupUsers().remove(byeMultiCastMessage.getSender());
                 } else {
                     if (Objects.equals(receivedMessage.getSender(), username)) {
                         System.out.println("Message from me - " + receivedMessage.getTime());
@@ -243,7 +246,7 @@ public class MulticastClient {
 
     public void sayHello(String destination) throws IOException {
         if (socket != null) {
-            HelloMultiCastMessage fullMessage = new HelloMultiCastMessage("Hello", this.username, destination, new Date(System.currentTimeMillis()));
+            HelloMulticastMessage fullMessage = new HelloMulticastMessage("Hello", this.username, destination, new Date(System.currentTimeMillis()));
             String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
             DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
                     this.group, this.port);
@@ -253,7 +256,7 @@ public class MulticastClient {
 
     private void sayGoodBye() throws IOException {
         if (socket != null) {
-            ByeMultiCastMessage fullMessage = new ByeMultiCastMessage("Hello", this.username, new Date(System.currentTimeMillis()));
+            ByeMulticastMessage fullMessage = new ByeMulticastMessage("Hello", this.username, new Date(System.currentTimeMillis()));
             String stringMessage = gson.toJson(fullMessage, messageTypeToken.getType());
             DatagramPacket packetToSend = new DatagramPacket(stringMessage.getBytes(), stringMessage.length(),
                     this.group, this.port);
