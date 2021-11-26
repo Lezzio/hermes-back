@@ -3,7 +3,9 @@ package fr.insalyon.messenger.net.model;
 import java.util.Date;
 import java.util.List;
 
-
+/**
+ * Message used to get the list of notifications of a user
+ */
 public class GetNotifications extends Message{
     private List<Notification> notifications;
 

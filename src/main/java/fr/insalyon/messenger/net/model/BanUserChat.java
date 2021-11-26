@@ -1,7 +1,6 @@
 package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
-import java.util.List;
 
 /**
  * Message used to exchange ban requets
