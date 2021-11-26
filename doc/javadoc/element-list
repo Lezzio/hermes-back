@@ -1,0 +1,7 @@
+fr.insalyon.messenger
+fr.insalyon.messenger.net.model
+fr.insalyon.messenger.net.mongodb
+fr.insalyon.messenger.net.multicastclient
+fr.insalyon.messenger.net.serializer
+fr.insalyon.messenger.net.server
+fr.insalyon.messenger.stream
