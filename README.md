@@ -39,6 +39,8 @@ project
 │    │   fichiers .class
 │
 └───doc
-     │  Javadoc API   
+     │  Javadoc API 
+└───build/libs
+     │  fichiers .jar
 
 ```
