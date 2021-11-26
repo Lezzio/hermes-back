@@ -26,3 +26,19 @@ NOTE : The fat jar is by default the one with the -all suffix
 ### Multicast client :
 To start the multicast client application launch the following command :
 ./gradlew run
+
+## Organisation des répertoires
+```
+project
+│   README.md  
+│
+└───src
+│    │  fichiers .java
+│    |  fichiers .kt
+└───build/classes
+│    │   fichiers .class
+│
+└───doc
+     │  Javadoc API   
+
+```
