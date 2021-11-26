@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import com.google.gson.GsonBuilder;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
 import fr.insalyon.multicast.AppState;
+import kotlin.Pair;
 
 
 public class MulticastClient {
@@ -166,6 +167,9 @@ public class MulticastClient {
         } catch (IOException e) {
             if (!e.getMessage().equals("socket closed") && !e.getMessage().equals("Socket is closed")) {
                 e.printStackTrace();
+            }
+            if (isDesktopActive()) {
+                appState.getNotification().setValue(new Pair<>("An error occured : " + e.getMessage(), true));
             }
         }
     }

@@ -14,15 +14,13 @@ import fr.insalyon.hermes.AppState;
 
 public class HermesServer {
 
-    public static final int SYSTEM_CORES = Runtime.getRuntime().availableProcessors();
-
     private final Map<String, Socket> connections;
     private final Map<String, List<String>> chats;
 
     private ServerSocket serverSocket;
     private boolean running;
-    private ConnectionHandler connectionHandler;
-    private final ExecutorService executorService = Executors.newFixedThreadPool(SYSTEM_CORES);
+    private final ConnectionHandler connectionHandler;
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
     protected MongoDB mongoDB;
 
     /**
@@ -55,7 +53,7 @@ public class HermesServer {
     public void init(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
         running = true;
-        System.out.println("Server initialized on [IP] "+ Inet4Address.getLocalHost().getHostAddress()+ " [PORT] "+port);
+        System.out.println("Server initialized on [IP] " + Inet4Address.getLocalHost().getHostAddress() + " [PORT]");
         while (running) {
             Socket socket = serverSocket.accept();
             executorService.submit(() -> connectionHandler.handleConnection(this, socket));
