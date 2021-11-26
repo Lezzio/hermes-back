@@ -18,6 +18,8 @@ java -jar [JAR_NAME] [PORT]
 For example :
 java -jar hermes-back-1.0-all.jar 5000
 
+NOTE : The fat jar is by default the one with the -all suffix
+
 ### Multicast client :
 To start the multicast client application launch the following command :
 ./gradlew run
