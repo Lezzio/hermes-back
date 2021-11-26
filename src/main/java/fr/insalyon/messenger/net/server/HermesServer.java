@@ -132,7 +132,6 @@ public class HermesServer {
             System.out.println("Usage: java EchoServer <EchoServer port>");
             System.exit(1);
         }
-        BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
 
         try {
