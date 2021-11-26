@@ -13,5 +13,6 @@ data class AppState(
     val serverPort: MutableState<Int> = mutableStateOf(5000),
     val multicastClient: MutableState<MulticastClient?> = mutableStateOf(null),
     val messages: SnapshotStateList<MulticastMessage> = mutableStateListOf(),
-    val connectedGroupUsers: SnapshotStateList<String> = mutableStateListOf()
+    val connectedGroupUsers: SnapshotStateList<String> = mutableStateListOf(),
+    val notification: MutableState<Pair<String, Boolean>?> = mutableStateOf(null)
 )

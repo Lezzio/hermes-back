@@ -17,6 +17,8 @@ import fr.insalyon.messenger.net.multicastclient.MulticastClient
 import fr.insalyon.multicast.components.currentChatUsers
 import fr.insalyon.multicast.components.currentChatView
 import fr.insalyon.multicast.dialog.globalAskUsernameDialog
+import fr.insalyon.multicast.dialog.globalNotification
+import kotlin.system.exitProcess
 
 var multicastClient: MulticastClient? = null
 
@@ -37,9 +39,18 @@ fun App() {
             //Connecting user...
             appState.multicastClient.value = rememberSaveable { MulticastClient(appState.username.value, false, appState) }
             if (appState.multicastClient.value?.isConnected == false) {
-                appState.multicastClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
+                try {
+                    appState.multicastClient.value?.connect(appState.serverAddress.value, appState.serverPort.value)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    appState.notification.value = "Couldn't establish the connection, try restarting the application" to true
+                }
                 multicastClient = appState.multicastClient.value
                 println("User connected as ${appState.username.value}")
+            }
+
+            if (appState.notification.value != null && appState.notification.value?.second == true) {
+                globalNotification(appState)
             }
 
             Row {
@@ -54,6 +65,7 @@ fun main() = application {
     Window(onCloseRequest = {
         multicastClient?.disconnect()
         exitApplication()
+        exitProcess(0)
     }) {
         App()
     }
