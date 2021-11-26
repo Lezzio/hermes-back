@@ -21,6 +21,10 @@ public class Main {
             .registerSubtype(PrivateMessage.class)
             .registerSubtype(AuthenticationMessage.class);
 
+    /**
+     * Test main, hermes server with local main can be located in fr.insalyon.messenger.server.HermesServer
+     * @param args
+     */
     public static void main(String ... args) {
         System.out.println("Ok");
 

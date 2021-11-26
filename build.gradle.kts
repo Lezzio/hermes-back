@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.5.21"
     id("org.jetbrains.compose") version "1.0.0-alpha3"
+    id("com.github.johnrengelman.shadow") version "7.1.0"
 }
 
 group = "me.aguigal"
@@ -36,4 +37,8 @@ compose.desktop {
             packageVersion = "1.0.0"
         }
     }
+}
+
+tasks.withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>() {
+    this.manifest.attributes["Main-Class"] = "fr.insalyon.messenger.net.server.HermesServer"
 }

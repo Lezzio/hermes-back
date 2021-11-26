@@ -9,7 +9,7 @@ import fr.insalyon.messenger.net.multicastclient.MulticastClient
 
 data class AppState(
     val username: MutableState<String?> = mutableStateOf(null),
-    val serverAddress: MutableState<String> = mutableStateOf("224.0.0.1"),
+    val serverAddress: MutableState<String> = mutableStateOf("224.0.0.2"),
     val serverPort: MutableState<Int> = mutableStateOf(5000),
     val multicastClient: MutableState<MulticastClient?> = mutableStateOf(null),
     val messages: SnapshotStateList<MulticastMessage> = mutableStateListOf(),
