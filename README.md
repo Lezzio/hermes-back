@@ -1,6 +1,9 @@
 # hermes-back
 TP1 réseaux INSA Lyon - application messenger
 
+SDK Used :
+Java 15
+
 The project works with the gradle build tools which can be called with the gradlew script
 
 We defined tasks to start the applications.
