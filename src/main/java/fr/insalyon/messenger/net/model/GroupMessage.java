@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to send group message
+ */
 public class GroupMessage extends Message {
 
     private final String content;

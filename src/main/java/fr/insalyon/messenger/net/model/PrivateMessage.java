@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to exchange private message
+ */
 public class PrivateMessage extends Message {
 
     private final String content;

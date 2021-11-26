@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Allows to exchange an alert message
+ */
 public class AlertMessage extends Message {
 
     private final String content;

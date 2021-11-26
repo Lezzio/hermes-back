@@ -3,6 +3,9 @@ package fr.insalyon.messenger.net.model;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Message used to add users in a chat
+ */
 public class AddUserChat extends Message {
     private String chatName;
     private List<String> userName;

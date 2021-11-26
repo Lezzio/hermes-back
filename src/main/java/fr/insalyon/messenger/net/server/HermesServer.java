@@ -81,7 +81,7 @@ public class HermesServer {
     public void init(int port) throws IOException {
         this.serverSocket = new ServerSocket(port);
         running = true;
-        System.out.println("Server initialized on [IP] " + Inet4Address.getLocalHost().getHostAddress() + " [PORT]");
+        System.out.println("Server initialized on [IP] " + Inet4Address.getLocalHost().getHostAddress() + " [PORT]" + port);
         while (running) {
             Socket socket = serverSocket.accept();
             executorService.submit(() -> connectionHandler.handleConnection(this, socket));

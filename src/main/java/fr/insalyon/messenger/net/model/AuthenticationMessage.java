@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Allows a client to authenticate into the server
+ */
 public class AuthenticationMessage extends Message {
 
     private final String password;

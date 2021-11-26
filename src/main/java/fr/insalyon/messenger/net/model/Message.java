@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Default message class that all others inherit to exchange information
+ */
 public class Message {
 
     private final String sender;

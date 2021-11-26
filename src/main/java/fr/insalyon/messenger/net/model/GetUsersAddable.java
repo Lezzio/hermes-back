@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Message used to get users that are addable in a chat
+ */
 public class GetUsersAddable extends Message{
     private List<String> users;
 

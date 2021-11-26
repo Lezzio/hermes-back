@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Messages used to acces a chat and get all messages of the chat
+ */
 public class AccessChat extends Message {
     private String chatName;
     private int users;

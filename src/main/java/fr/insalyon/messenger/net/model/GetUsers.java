@@ -4,6 +4,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Message used to get users that belong to a specific chat
+ * All users are associated with a boolean -> true if the user is connected
+ */
 public class GetUsers extends Message {
     private Map<String, Boolean> connected;
 

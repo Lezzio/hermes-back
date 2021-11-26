@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to exchange added notifications
+ */
 public class AddNotification extends Notification{
     private LogChat chat;
 

@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to exchange notification
+ */
 public class Notification extends Message{
     private String typeNotification;
     private String content;

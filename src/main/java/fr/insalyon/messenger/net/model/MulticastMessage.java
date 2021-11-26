@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to send content in a group chat
+ */
 public class MulticastMessage {
 
     private final String content;

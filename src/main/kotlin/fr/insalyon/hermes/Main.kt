@@ -14,6 +14,10 @@ import fr.insalyon.hermes.components.userPanel
 import fr.insalyon.hermes.dialog.globalAskPortDialog
 import fr.insalyon.messenger.net.server.HermesServer
 
+
+/**
+ * WARNING : Not yet usable
+ */
 @Composable
 @Preview
 fun App() {

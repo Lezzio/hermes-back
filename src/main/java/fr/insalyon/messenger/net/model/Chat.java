@@ -4,6 +4,9 @@ import fr.insalyon.messenger.net.model.TextMessage;
 
 import java.util.List;
 
+/**
+ * Allows to create a chat that will be exchange in a message
+ */
 public class Chat {
     private String admin;
     private String chatName;

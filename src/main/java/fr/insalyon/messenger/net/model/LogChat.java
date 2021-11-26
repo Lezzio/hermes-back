@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.List;
 
+/**
+ * This class is used to define a chat in general
+ */
 public class LogChat {
     private String name;
     private List<String> users;

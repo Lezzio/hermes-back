@@ -2,6 +2,9 @@ package fr.insalyon.messenger.net.model;
 
 import java.util.Date;
 
+/**
+ * Message used to ask to leave a chat
+ */
 public class LeaveChat extends Message {
 
     private String chatName;
