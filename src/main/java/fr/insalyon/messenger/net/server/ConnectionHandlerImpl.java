@@ -7,7 +7,6 @@ import fr.insalyon.messenger.net.model.*;
 import fr.insalyon.messenger.net.model.Chat;
 import fr.insalyon.messenger.net.mongodb.User;
 import fr.insalyon.messenger.net.serializer.RuntimeTypeAdapterFactory;
-import org.w3c.dom.Text;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -15,10 +14,20 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.*;
 
+/**
+ * Implements the interface to handle a connection
+ */
 public class ConnectionHandlerImpl implements ConnectionHandler {
 
+    /**
+     * Defines the type of a message received
+     */
     private static final TypeToken<Message> messageTypeToken = new TypeToken<>() {
     };
+
+    /**
+     * List of the type of messages that the server can handle
+     */
     private static final RuntimeTypeAdapterFactory<Message> typeFactory = RuntimeTypeAdapterFactory
             .of(Message.class, "type")
             .registerSubtype(GroupMessage.class)
@@ -45,6 +54,14 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             .registerTypeAdapterFactory(typeFactory)
             .create();
 
+    /**
+     * Allows to handle a connection by interpreted received message
+     * Allows stocking datas in the mongoDB database
+     * Allows to send a response of his request to the client
+     * @param hermesServer the hermes server
+     * @param socket the socket received
+     * the socket and the associated client name allows identifying a client
+     */
     @Override
     public void handleConnection(HermesServer hermesServer, Socket socket) {
         String client = "";
@@ -54,14 +71,17 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
             socIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintStream socOut = new PrintStream(socket.getOutputStream());
             String message;
+
+            //The server receive message from the client
             while ((message = socIn.readLine()) != null) {
-                //System.out.println("received message");
+
                 Message receivedMessage = gson.fromJson(message, messageTypeToken.getType());
 
-                //System.out.println("Message = " + message);
-                //System.out.println("Deserialized = " + receivedMessage + " name = " + receivedMessage.getClass().getSimpleName());
-
+                //Handle the type of message triggered and deal with the event that it triggers
                 switch (receivedMessage.getClass().getSimpleName()) {
+
+                    //Message send by the client to say hello and allows the server to add the client
+                    //to it list of connections
                     case "ConnectionMessage":
                         ConnectionMessage msg = (ConnectionMessage) receivedMessage;
                         User user = hermesServer.mongoDB.searchUser(msg.getName());
@@ -73,35 +93,44 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                             userName = user.getUsername();
                         }
 
+                        //A client can't connect on different device
                         if(hermesServer.getConnections().containsKey(userName)){
                             socket.close();
                             return;
                         }
+
                         client = userName;
                         hermesServer.addClient(userName, socket);
                         TextMessage logMessage = new TextMessage("Connection", userName, "server", new Date(System.currentTimeMillis()));
                         hermesServer.mongoDB.insertLog(logMessage);
                         hermesServer.logMessage(logMessage);
+
+                        //The server inform the client that the connection is a success
                         AlertConnected alertConnected = new AlertConnected(userName, "server", userName, new Date(System.currentTimeMillis()));
                         if (user != null) {
                             alertConnected.setPreviousConnection(user.getPreviousConnection());
                         }
                         socOut.println(gson.toJson(alertConnected, messageTypeToken.getType()));
                         break;
+
+                    //Message send by the client when he wants to deconnect
                     case "DeconnectionMessage":
                         DisconnectionMessage decoMsg = (DisconnectionMessage) receivedMessage;
                         disconnectionFromUser(decoMsg.getSender(), hermesServer);
                         break;
+
+                    //Allows to send to the user a list of user addable in the current chat
                     case "GetUsersAddable":
                         GetUsersAddable getUsersAddable = (GetUsersAddable) receivedMessage;
                         List<String> users = hermesServer.mongoDB.getUsersAddable(hermesServer.getChat(getUsersAddable.getDestination()));
                         getUsersAddable.setUsers(users);
                         socOut.println(gson.toJson(getUsersAddable, messageTypeToken.getType()));
                         break;
+
+                    //Allows to send to the user the list of chat to which it belongs
                     case "GetChats":
                         GetChats getChats = (GetChats) receivedMessage;
                         List<LogChat> logChats = hermesServer.mongoDB.getChats(getChats.getSender());
-                        //System.out.println("Log chat size = " + logChats.size());
                         for (LogChat logChat : logChats) {
                             hermesServer.addChat(logChat.getName(), logChat.getUsers());
                             for (String userInChat : logChat.getUsers()) {
@@ -118,6 +147,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         getChats.setLogChat(logChats);
                         socOut.println(gson.toJson(getChats, messageTypeToken.getType()));
                         break;
+
+                    //Allows a user to access a chat and send him the list of messages belong
                     case "AccessChat":
                         AccessChat accessChat = (AccessChat) receivedMessage;
                         Chat chatGet = hermesServer.mongoDB.getChat(accessChat.getChatName());
@@ -132,6 +163,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.mongoDB.insertLog(logMessage);
                         hermesServer.logMessage(logMessage);
                         break;
+
+                    //Allows to add a list of user in a chat
                     case "AddUserChat":
                         AddUserChat addUserChat = (AddUserChat) receivedMessage;
                         hermesServer.mongoDB.addChatUsers(addUserChat.getChatName(), addUserChat.getUsers());
@@ -152,6 +185,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         }
 
                         boolean first = true;
+                        //Alert connected users in the chat of the event
                         for (String newuser : addUserChat.getUsers()) {
                             TextMessage fullMessage = new TextMessage(newuser + " added",
                                     addUserChat.getChatName(),
@@ -170,6 +204,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.logMessage(logMessage);
 
                         break;
+
+                    //Allows to ban a user from a chat
                     case "BanUserChat":
                         BanUserChat banUserChat = (BanUserChat) receivedMessage;
                         hermesServer.mongoDB.removeChatUser(banUserChat.getChatName(), banUserChat.getUser());
@@ -189,6 +225,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                                 new Date(System.currentTimeMillis()));
                         fullMessage.setSpecialEvent();
                         hermesServer.mongoDB.insertMessages(fullMessage);
+
+                        //Alert connected users in the chat of the event
                         for (String userInChat : hermesServer.getChat(banUserChat.getChatName())) {
                             if (hermesServer.getConnections().containsKey(userInChat)) {
                                 new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(fullMessage, messageTypeToken.getType()));
@@ -198,6 +236,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.mongoDB.insertLog(logMessage);
                         hermesServer.logMessage(logMessage);
                         break;
+
+                    //Allows to create a new chat if the name is unique
                     case "CreateChat":
                         CreateChat createChat = (CreateChat) receivedMessage;
                         String chatName = hermesServer.mongoDB.searchChat(createChat.getName());
@@ -218,6 +258,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.logMessage(logMessage);
 
                         break;
+
+                    //Allows a user to leave a chat
                     case "LeaveChat":
                         LeaveChat leaveChat = (LeaveChat) receivedMessage;
                         hermesServer.removeChatUser(leaveChat.getName(), leaveChat.getSender());
@@ -228,6 +270,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
 
                         socOut.println(gson.toJson(leaveChat, messageTypeToken.getType()));
 
+                        //Alert connected users in the chat of the event
                         for (String userInChat : hermesServer.getChat(leaveChat.getName())) {
                             if (hermesServer.getConnections().containsKey(userInChat)) {
                                 new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(fullMessage, messageTypeToken.getType()));
@@ -237,6 +280,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         hermesServer.mongoDB.insertLog(logMessage);
                         hermesServer.logMessage(logMessage);
                         break;
+
+                    //Allows to update the name and the list of admin of a chat
                     case "UpdateChat":
                         UpdateChat updateChat = (UpdateChat) receivedMessage;
                         boolean nameChanged = true;
@@ -247,6 +292,7 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         boolean result = hermesServer.mongoDB.updateChat(updateChat, nameChanged);
                         if (result) {
                             hermesServer.mongoDB.insertMessages(new TextMessage("Chat parameters update", updateChat.getChatName(), updateChat.getChatName(), new Date(System.currentTimeMillis())));
+                            //Alert connected users in the chat of the event
                             for (String userInChat : hermesServer.getChat(updateChat.getDestination())) {
                                 if (hermesServer.getConnections().containsKey(userInChat)) {
                                     new PrintStream(hermesServer.getConnections().get(userInChat).getOutputStream()).println(gson.toJson(updateChat, messageTypeToken.getType()));
@@ -269,6 +315,8 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                             socOut.println(gson.toJson(alert, messageTypeToken.getType()));
                         }
                         break;
+
+                    //Allows to get the list of user belongs to a chat
                     case "GetUsers":
                         GetUsers getUsers = (GetUsers) receivedMessage;
                         Map<String, Boolean> connectedUsers = new HashMap<>();
@@ -278,20 +326,22 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
                         }
                         getUsers = new GetUsers(getUsers.getDestination(), getUsers.getSender(), new Date(System.currentTimeMillis()));
                         getUsers.setConnected(connectedUsers);
-                        connectedUsers.forEach((usera, connected) -> {
-                            System.out.println("Username = " + usera + " connected = " + connected);
-                        });
                         socOut.println(gson.toJson(getUsers, messageTypeToken.getType()));
                         logMessage = new TextMessage("asks for connected users in chat " + getUsers.getSender(), getUsers.getDestination(), getUsers.getSender(), new Date(System.currentTimeMillis()));
                         hermesServer.mongoDB.insertLog(logMessage);
                         hermesServer.logMessage(logMessage);
                         break;
+
+                    //Allows to get notifications of the client
                     case "GetNotifications":
                         GetNotifications getNotifications = (GetNotifications) receivedMessage;
                         List<Notification> notifications = hermesServer.mongoDB.getNotifications(getNotifications.getSender());
                         getNotifications.setNotifications(notifications);
                         socOut.println(gson.toJson(getNotifications, messageTypeToken.getType()));
                         break;
+
+                    //Allows to send a text message receive from a client to all users
+                    //in the corresponding chat
                     case "TextMessage":
                         TextMessage textMessage = (TextMessage) receivedMessage;
                         if (Objects.equals(textMessage.getDestination(), "server")) {
@@ -317,13 +367,18 @@ public class ConnectionHandlerImpl implements ConnectionHandler {
         } catch (Exception exception) {
             System.out.println("Exception caught : " + exception.getMessage());
             if (!Objects.equals(client, "")) {
+                //Trying to deconnect user
                 disconnectionFromUser(client, hermesServer);
             }
         }
     }
 
+    /**
+     * Allows to handle a disconnection of a user
+     * @param username the username to disconnect
+     * @param hermesServer the hermes server
+     */
     private void disconnectionFromUser(String username, HermesServer hermesServer) {
-        System.out.println("Disconnecting " + username);
         try {
             hermesServer.removeClient(username);
             TextMessage log = new TextMessage("Deconnection", username, "server", new Date(System.currentTimeMillis()));
