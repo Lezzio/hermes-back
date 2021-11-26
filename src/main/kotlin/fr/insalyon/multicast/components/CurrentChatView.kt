@@ -19,6 +19,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import fr.insalyon.multicast.AppState
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -45,10 +46,13 @@ fun currentChatView(appState: AppState, modifier: Modifier = Modifier) {
                 } else {
                     MessageType.OTHER
                 }
+                val formatter = SimpleDateFormat("MM/dd 'at' HH:mm")
+                val dateInfo = formatter.format(it.time)
                 MessageCard(
                     msg = Message(
                         author = it.sender,
                         body = it.content,
+                        dateInfo = dateInfo,
                         messageType = messageType
                     ),
                     modifier = Modifier.align(

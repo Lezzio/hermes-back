@@ -19,7 +19,7 @@ enum class MessageType {
     SYSTEM
 }
 
-data class Message(val author: String, val body: String, val messageType: MessageType)
+data class Message(val author: String, val body: String, val dateInfo: String, val messageType: MessageType)
 
 @Composable
 fun MessageCard(msg: Message, modifier: Modifier) {
@@ -45,7 +45,7 @@ fun MessageCard(msg: Message, modifier: Modifier) {
         Column {
             if (msg.messageType != MessageType.SYSTEM) {
                 Text(
-                    text = msg.author,
+                    text = "${msg.author} - ${msg.dateInfo}",
                 )
             }
             // Add a vertical space between the author and message texts
