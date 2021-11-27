@@ -10,6 +10,8 @@ We defined tasks to start the applications.
 
 ### Hermes Server (chat application) :
 
+Warning: to use mongoDB, you must not be connected to a private company network like Eduoram at insa.
+
 The repository already has a bundled and compiled jar, but if you wish you can generate a new using (generates a fat jar with all the dependencies) :
 ./gradlew shadowJar
 
